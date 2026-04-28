@@ -66,12 +66,12 @@ const AdminDashboard = () => {
     return (
         <div className="space-y-10">
             {/* Header with Head Admin Name */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight">Admin Overview</h1>
-                    <p className="text-slate-500 font-medium">Monitoring tuition activities and student progress</p>
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Admin Overview</h1>
+                    <p className="text-slate-500 font-medium text-sm md:text-base">Monitoring tuition activities and student progress</p>
                 </div>
-                <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+                <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 w-fit">
                     <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-black">
                         {headAdminName?.[0]}
                     </div>
@@ -83,7 +83,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
                 {cards.map((card, i) => (
                     <motion.div 
                         key={i}

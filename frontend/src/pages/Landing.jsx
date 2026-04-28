@@ -91,15 +91,15 @@ const Landing = () => {
                     </div>
                 </nav>
                 
-                <div className="container mx-auto px-6 py-32 text-center relative z-10">
-                    <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
+                <div className="container mx-auto px-6 py-20 md:py-32 text-center relative z-10">
+                    <h1 className="text-4xl md:text-7xl font-extrabold mb-6 tracking-tight leading-tight">
                         Excellence in <span className="text-primary-200">Education</span>
                     </h1>
-                    <p className="text-xl md:text-2xl mb-10 text-primary-100 max-w-2xl mx-auto">
+                    <p className="text-lg md:text-2xl mb-10 text-primary-100 max-w-2xl mx-auto px-4">
                         Providing top-tier coaching for Classes 4 to 8. Empowering students to achieve their academic goals with personalized attention.
                     </p>
-                    <Link to={token ? dashboardLink : "/register"} className="inline-flex items-center gap-2 px-10 py-4 bg-white text-primary-700 rounded-full text-xl font-bold hover:scale-105 transition shadow-2xl">
-                        {token ? 'Go to Dashboard' : 'Get Started'} <ChevronRight />
+                    <Link to={token ? dashboardLink : "/register"} className="inline-flex items-center gap-2 px-8 md:px-10 py-4 bg-white text-primary-700 rounded-full text-lg md:text-xl font-bold hover:scale-105 transition shadow-2xl">
+                        {token ? 'Go to Dashboard' : 'Get Started'} <ChevronRight className="w-5 h-5" />
                     </Link>
                 </div>
             </header>
@@ -107,9 +107,9 @@ const Landing = () => {
             {/* Classes Section */}
             <section className="py-20 bg-slate-50">
                 <div className="container mx-auto px-6 text-center">
-                    <h2 className="text-4xl font-bold mb-4 text-slate-800">Our Classes</h2>
-                    <p className="text-slate-600 mb-16">Click on a class to see the subjects we teach</p>
-                    <div ref={classesRef} className="grid grid-cols-2 md:grid-cols-5 gap-6 max-w-6xl mx-auto">
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-800">Our Classes</h2>
+                    <p className="text-slate-600 mb-12 md:mb-16 text-sm md:text-base">Click on a class to see the subjects we teach</p>
+                    <div ref={classesRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
                         {classData.map((cls) => (
                             <div 
                                 key={cls.id} 

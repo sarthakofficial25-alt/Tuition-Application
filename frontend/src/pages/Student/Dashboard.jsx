@@ -43,21 +43,21 @@ const StudentDashboard = () => {
     return (
         <div className="space-y-8">
             {/* Stats Header */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat, i) => (
                     <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
-                        <div className={`w-12 h-12 ${stat.color} rounded-2xl flex items-center justify-center`}>
+                        <div className={`w-12 h-12 ${stat.color} rounded-2xl flex items-center justify-center shrink-0`}>
                             <stat.icon className="w-6 h-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                            <p className="text-2xl font-black text-slate-800">{stat.value}</p>
+                            <p className="text-xl md:text-2xl font-black text-slate-800">{stat.value}</p>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Recent Homework */}
@@ -70,11 +70,11 @@ const StudentDashboard = () => {
                                 <div key={hw._id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
                                     <h3 className="font-bold text-slate-800 mb-1">{hw.title}</h3>
                                     <p className="text-slate-600 text-sm mb-4">{hw.description}</p>
-                                    <div className="flex justify-between items-center text-xs">
+                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 text-xs">
                                         <span className="text-slate-500 flex items-center gap-1 font-medium">
                                             <Clock className="w-3.5 h-3.5" /> Due: {new Date(hw.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                         </span>
-                                        <span className="bg-primary-50 text-primary-600 px-3 py-1 rounded-full font-black uppercase tracking-widest text-[9px]">New</span>
+                                        <span className="bg-primary-50 text-primary-600 px-3 py-1 rounded-full font-black uppercase tracking-widest text-[9px] w-fit">New</span>
                                     </div>
                                 </div>
                             )) : (
@@ -91,35 +91,37 @@ const StudentDashboard = () => {
                             <Award className="text-primary-600" /> Recent Results
                         </h2>
                         <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                                    <tr>
-                                        <th className="px-8 py-5 font-black">Subject</th>
-                                        <th className="px-8 py-5 font-black">Marks</th>
-                                        <th className="px-8 py-5 font-black">Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {data.results.length > 0 ? data.results.slice(0, 5).map(res => (
-                                        <tr key={res._id} className="hover:bg-slate-50/50 transition">
-                                            <td className="px-8 py-5 font-bold text-slate-800">{res.testName}</td>
-                                            <td className="px-8 py-5">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-primary-600 font-black text-lg">{res.marksObtained}</span>
-                                                    <span className="text-slate-300 text-sm">/ {res.totalMarks}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-5 text-slate-500 text-sm font-medium">
-                                                {res.testDate ? new Date(res.testDate).toLocaleDateString('en-IN') : new Date(res.createdAt).toLocaleDateString('en-IN')}
-                                            </td>
-                                        </tr>
-                                    )) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left min-w-[500px]">
+                                    <thead className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                                         <tr>
-                                            <td colSpan="3" className="px-8 py-12 text-center text-slate-400 italic">No results recorded yet.</td>
+                                            <th className="px-8 py-5 font-black">Subject</th>
+                                            <th className="px-8 py-5 font-black">Marks</th>
+                                            <th className="px-8 py-5 font-black">Date</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {data.results.length > 0 ? data.results.slice(0, 5).map(res => (
+                                            <tr key={res._id} className="hover:bg-slate-50/50 transition">
+                                                <td className="px-8 py-5 font-bold text-slate-800">{res.testName}</td>
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-primary-600 font-black text-lg">{res.marksObtained}</span>
+                                                        <span className="text-slate-300 text-sm">/ {res.totalMarks}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5 text-slate-500 text-sm font-medium">
+                                                    {res.testDate ? new Date(res.testDate).toLocaleDateString('en-IN') : new Date(res.createdAt).toLocaleDateString('en-IN')}
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan="3" className="px-8 py-12 text-center text-slate-400 italic">No results recorded yet.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </section>
                 </div>
