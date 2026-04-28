@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../../api/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, User, Loader2, BookOpen } from 'lucide-react';
-
-import { API_BASE_URL as API } from '../../config';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const token = () => sessionStorage.getItem('token');
@@ -19,9 +17,7 @@ const StudentSchedule = () => {
     const fetchSchedule = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get(`${API}/schedule/my`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
+            const { data } = await API.get('/schedule/my');
             setSchedule(data);
         } catch (err) {
             console.error(err);

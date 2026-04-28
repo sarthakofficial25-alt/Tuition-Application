@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../../api/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Megaphone, Loader2, Calendar } from 'lucide-react';
 
-import { API_BASE_URL as API } from '../../config';
 
 const token = () => sessionStorage.getItem('token');
 
@@ -18,9 +17,7 @@ const StudentNotice = () => {
     const fetchAnnouncements = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get(`${API}/announcements`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
+            const { data } = await API.get('/announcements');
             setAnnouncements(data);
         } catch (err) {
             console.error(err);

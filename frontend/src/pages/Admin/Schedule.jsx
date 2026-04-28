@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../../api/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Calendar, Plus, Pencil, Trash2, X, Check, 
@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { CLASS_DATA, ALL_CLASS_IDS } from '../../constants/classData';
 
-import { API_BASE_URL as API } from '../../config';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const token = () => sessionStorage.getItem('token');
@@ -30,9 +29,7 @@ const AdminSchedule = () => {
     const fetchSchedules = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get(`${API}/schedule`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
+            const { data } = await API.get('/schedule');
             setSchedules(data);
         } catch (err) {
             console.error(err);
@@ -70,12 +67,11 @@ const AdminSchedule = () => {
 
         setFormLoading(true);
         try {
-            const headers = { Authorization: `Bearer ${token()}` };
             if (editing) {
-                const { data } = await axios.put(`${API}/schedule/${editing._id}`, form, { headers });
+                const { data } = await API.put(`/schedule/${editing._id}`, form);
                 setSchedules(prev => prev.map(s => s._id === data._id ? data : s));
             } else {
-                const { data } = await axios.post(`${API}/schedule`, form, { headers });
+                const { data } = await API.post('/schedule', form);
                 setSchedules(prev => [...prev, data]);
             }
             setShowModal(false);
@@ -89,9 +85,7 @@ const AdminSchedule = () => {
     const handleDelete = async () => {
         setFormLoading(true);
         try {
-            await axios.delete(`${API}/schedule/${deleting._id}`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
+            await API.delete(`/schedule/${deleting._id}`);
             setSchedules(prev => prev.filter(s => s._id !== deleting._id));
             setDeleting(null);
         } catch (err) {

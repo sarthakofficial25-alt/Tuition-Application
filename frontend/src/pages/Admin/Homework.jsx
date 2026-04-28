@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../../api/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BookText, Plus, Pencil, Trash2, X, Check, ChevronDown,
@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { CLASS_DATA, ALL_SUBJECTS, ALL_CLASS_IDS } from '../../constants/classData';
 
-import { API_BASE_URL as API } from '../../config';
 // CLASS_OPTIONS: 'All' + every class ID from the landing page
 const CLASS_OPTIONS = ['All', ...ALL_CLASS_IDS];
 
@@ -97,12 +96,11 @@ const HomeworkModal = ({ initial, onClose, onSave }) => {
         if (form.targetClasses.length === 0) { setErr('Select at least one class.'); return; }
         setLoading(true); setErr('');
         try {
-            const headers = { Authorization: `Bearer ${token()}` };
             if (editing) {
-                const { data } = await axios.put(`${API}/homework/${initial._id}`, form, { headers });
+                const { data } = await API.put(`/homework/${initial._id}`, form);
                 onSave(data, true);
             } else {
-                const { data } = await axios.post(`${API}/homework`, form, { headers });
+                const { data } = await API.post('/homework', form);
                 onSave(data, false);
             }
             onClose();
@@ -203,7 +201,7 @@ const DeleteConfirm = ({ hw, onClose, onDelete }) => {
         e.stopPropagation();
         setLoading(true);
         try {
-            await axios.delete(`${API}/homework/${hw._id}`, { headers: { Authorization: `Bearer ${token()}` } });
+            await API.delete(`/homework/${hw._id}`);
             onDelete(hw._id);
             onClose();
         } catch { setLoading(false); }
@@ -372,11 +370,9 @@ const AdminHomework = () => {
     const fetchHomework = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get(`${API}/homework`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
+            const { data } = await API.get('/homework');
             setHomeworks(data);
-        } catch { /* silent */ }
+        } catch (err) { /* silent */ }
         finally { setLoading(false); }
     };
 

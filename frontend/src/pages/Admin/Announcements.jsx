@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../../api/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Bell, Plus, Pencil, Trash2, X, Check, 
@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { ALL_CLASS_IDS } from '../../constants/classData';
 
-import { API_BASE_URL as API } from '../../config';
 
 const token = () => sessionStorage.getItem('token');
 
@@ -37,9 +36,7 @@ const AdminNotice = () => {
     const fetchAnnouncements = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get(`${API}/announcements`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
+            const { data } = await API.get('/announcements');
             setAnnouncements(data);
         } catch (err) {
             console.error(err);
@@ -50,9 +47,7 @@ const AdminNotice = () => {
 
     const fetchStudents = async () => {
         try {
-            const { data } = await axios.get(`${API}/students`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
+            const { data } = await API.get('/students');
             setStudents(data);
         } catch (err) {
             console.error('Failed to fetch students:', err);
@@ -102,10 +97,10 @@ const AdminNotice = () => {
             if (payload.targetType !== 'Student') payload.targetStudent = null;
 
             if (editing) {
-                const { data } = await axios.put(`${API}/announcements/${editing._id}`, payload, { headers });
+                const { data } = await API.put(`/announcements/${editing._id}`, payload);
                 setAnnouncements(prev => prev.map(a => a._id === data._id ? data : a));
             } else {
-                const { data } = await axios.post(`${API}/announcements`, payload, { headers });
+                const { data } = await API.post('/announcements', payload);
                 setAnnouncements(prev => [data, ...prev]);
             }
             setShowModal(false);
@@ -119,9 +114,7 @@ const AdminNotice = () => {
     const handleDelete = async () => {
         setFormLoading(true);
         try {
-            await axios.delete(`${API}/announcements/${deleting._id}`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
+            await API.delete(`/announcements/${deleting._id}`);
             setAnnouncements(prev => prev.filter(a => a._id !== deleting._id));
             setDeleting(null);
         } catch (err) {

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../../api/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookText, BookOpen, CalendarDays, Clock, AlertCircle, Loader2, X } from 'lucide-react';
 
-import { API_BASE_URL as API } from '../../config';
 
 const token = () => sessionStorage.getItem('token');
 
@@ -84,9 +83,7 @@ const StudentHomework = () => {
         setLoading(true);
         setError('');
         try {
-            const { data } = await axios.get(`${API}/homework/my`, {
-                headers: { Authorization: `Bearer ${token()}` }
-            });
+            const { data } = await API.get('/homework/my');
             setHomeworks(data);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to load homework.');
