@@ -46,7 +46,7 @@ router.post('/login', async (req, res) => {
         const isMatch = await user.comparePassword(password);
         if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-        if (!user.isApproved) {
+        if (!user.isApproved && user.role === 'student') {
             return res.status(403).json({ message: 'Your account is pending approval. Please contact the Head Admin.' });
         }
         

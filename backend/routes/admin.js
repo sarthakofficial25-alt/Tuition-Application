@@ -139,7 +139,7 @@ router.post('/teachers', auth, headAdmin, async (req, res) => {
         let user = await User.findOne({ email });
         if (user) return res.status(400).json({ message: 'User already exists' });
 
-        user = new User({ name, email, password, role: 'admin' });
+        user = new User({ name, email, password, role: 'admin', isApproved: true });
         await user.save();
         
         const profile = new AdminProfile({
