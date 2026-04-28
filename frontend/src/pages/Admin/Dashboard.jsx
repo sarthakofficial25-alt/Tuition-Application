@@ -65,41 +65,39 @@ const AdminDashboard = () => {
 
     return (
         <div className="space-y-10">
-            {/* Header with Head Admin Name */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Admin Overview</h1>
-                    <p className="text-slate-500 font-medium text-sm md:text-base">Monitoring tuition activities and student progress</p>
-                </div>
-                <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 w-fit">
-                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-black">
+            {/* Header with Management Authority */}
+            <div className="bg-white p-4 md:p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 font-black shadow-inner">
                         {headAdminName?.[0]}
                     </div>
                     <div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Management Authority</p>
-                        <p className="text-sm font-bold text-slate-800">{headAdminName}</p>
+                        <p className="text-base font-bold text-slate-800">{headAdminName}</p>
                     </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-2 text-[10px] font-black text-primary-600 bg-primary-50 px-3 py-1.5 rounded-full uppercase tracking-widest">
+                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-pulse"></span>
+                    Live Dashboard
                 </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6">
                 {cards.map((card, i) => (
                     <motion.div 
                         key={i}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
-                        className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+                        className="bg-white p-5 md:p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 flex flex-col items-center text-center"
                     >
-                        <div className="flex flex-col items-center text-center gap-3">
-                            <div className={`w-14 h-14 ${card.bg} ${card.color} rounded-2xl flex items-center justify-center shadow-inner`}>
-                                <card.icon className="w-7 h-7" />
-                            </div>
-                            <div>
-                                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{card.label}</p>
-                                <p className="text-2xl font-black text-slate-800">{card.value}</p>
-                            </div>
+                        <div className={`w-12 h-12 md:w-14 md:h-14 mb-3 ${card.bg} ${card.color} rounded-2xl flex items-center justify-center shadow-inner`}>
+                            <card.icon className="w-6 h-6 md:w-7 md:h-7" />
+                        </div>
+                        <div>
+                            <p className="text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-0.5">{card.label}</p>
+                            <p className="text-xl md:text-2xl font-black text-slate-800">{card.value}</p>
                         </div>
                     </motion.div>
                 ))}

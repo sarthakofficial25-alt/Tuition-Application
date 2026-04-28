@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X as CloseIcon } from 'lucide-react';
+import { Menu, X as CloseIcon, LogOut } from 'lucide-react';
 import API from '../api/api';
 
 const DashboardLayout = ({ children, role }) => {
@@ -76,65 +76,80 @@ const DashboardLayout = ({ children, role }) => {
                 <Sidebar role={role} onClose={() => setIsSidebarOpen(false)} />
             </div>
 
-            <main className="flex-1 p-4 md:p-8 overflow-y-auto w-full">
-                <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 relative">
-                    <div className="flex items-center gap-4">
+            <main className="flex-1 overflow-y-auto w-full flex flex-col">
+                {/* Unified Header */}
+                <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 md:px-8 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
                         <button 
                             onClick={() => setIsSidebarOpen(true)}
-                            className="hamburger-btn p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-primary-600 transition shadow-sm lg:hidden"
+                            className="hamburger-btn p-2.5 bg-slate-50 text-slate-600 rounded-xl lg:hidden hover:bg-primary-50 hover:text-primary-600 transition"
                         >
-                            <Menu className="w-6 h-6" />
+                            <Menu className="w-5 h-5" />
                         </button>
-                        <div>
-                            <h1 className="text-xl md:text-2xl font-bold text-slate-800">Welcome back, {user.name}</h1>
-                        {(role === 'admin' || role === 'head_admin') && headAdminName && (
-                            <p className="text-primary-600 text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 mt-1">
-                                <span className="w-1.5 h-1.5 bg-primary-600 rounded-full animate-pulse"></span>
-                                Principal Authority: {headAdminName}
-                            </p>
-                        )}
-                        <p className="text-slate-500">Here's what's happening today</p>
+                        <div className="hidden sm:block lg:hidden font-bold text-slate-900 truncate max-w-[150px]">
+                            Excellence
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div 
-                            ref={profileRef}
-                            onClick={() => setShowProfile(!showProfile)}
-                            className="flex items-center gap-4 cursor-pointer hover:bg-white p-2 rounded-2xl transition-all relative"
-                        >
-                            <div className="text-right hidden md:block">
-                                <p className="font-semibold text-slate-800">{user.name}</p>
-                                <p className="text-xs text-slate-500 capitalize">{user.role?.replace('_', ' ')}</p>
-                            </div>
-                            <div className="w-10 h-10 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center font-bold">
-                                {user.name?.[0]}
-                            </div>
 
-                            {showProfile && (
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
-                                    <div className="border-b border-slate-50 pb-3 mb-3 text-center">
-                                        <p className="font-bold text-slate-800 break-words">{user.name}</p>
-                                        <p className="text-xs text-slate-500 capitalize">{user.role?.replace('_', ' ')}</p>
-                                    </div>
-                                    {user.role === 'student' && (
-                                        <button 
-                                            onClick={() => { setShowProfile(false); navigate('/student/profile'); }}
-                                            className="w-full flex items-center gap-2 text-sm text-slate-600 hover:bg-slate-50 p-2 rounded-xl transition-all mb-1"
-                                        >
-                                            View Profile
-                                        </button>
-                                    )}
-                                    <button 
-                                        onClick={handleLogout}
-                                        className="w-full flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 p-2 rounded-xl transition-all"
+                    <div className="flex items-center gap-4">
+                        <div className="text-right hidden md:block">
+                            <p className="text-sm font-bold text-slate-800 leading-none mb-1">{user.name}</p>
+                            <p className="text-[10px] text-primary-600 font-black uppercase tracking-widest">{user.role?.replace('_', ' ')}</p>
+                        </div>
+                        
+                        <div className="relative" ref={profileRef}>
+                            <button 
+                                onClick={() => setShowProfile(!showProfile)}
+                                className="w-10 h-10 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center font-bold hover:scale-105 transition shadow-sm"
+                            >
+                                {user.name?.[0]}
+                            </button>
+
+                            <AnimatePresence>
+                                {showProfile && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 p-3 z-50"
                                     >
-                                        Logout
-                                    </button>
-                                </div>
-                            )}
+                                        <div className="p-3 border-b border-slate-50 mb-2">
+                                            <p className="font-bold text-slate-800 text-sm truncate">{user.name}</p>
+                                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{user.role?.replace('_', ' ')}</p>
+                                        </div>
+                                        {user.role === 'student' && (
+                                            <button 
+                                                onClick={() => { setShowProfile(false); navigate('/student/profile'); }}
+                                                className="w-full flex items-center gap-2 text-sm text-slate-600 hover:bg-slate-50 p-2.5 rounded-xl transition-all"
+                                            >
+                                                My Profile
+                                            </button>
+                                        )}
+                                        <button 
+                                            onClick={handleLogout}
+                                            className="w-full flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 p-2.5 rounded-xl transition-all"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            Logout
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                 </header>
+                
+                <div className="p-5 md:p-10 flex-1">
+                    <div className="mb-8">
+                        <h2 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">Welcome, {user.name}</h2>
+                        {(role === 'admin' || role === 'head_admin') && headAdminName && (
+                            <p className="text-primary-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 mt-1.5">
+                                <span className="w-1.5 h-1.5 bg-primary-600 rounded-full animate-pulse"></span>
+                                Principal: {headAdminName}
+                            </p>
+                        )}
+                        <p className="text-slate-400 text-sm font-medium mt-1">Here's your summary for today</p>
+                    </div>
                 
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -147,6 +162,7 @@ const DashboardLayout = ({ children, role }) => {
                         {children}
                     </motion.div>
                 </AnimatePresence>
+                </div>
             </main>
         </div>
     );
