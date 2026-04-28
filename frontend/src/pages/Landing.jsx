@@ -66,25 +66,25 @@ const Landing = () => {
             {/* Hero Section */}
             <header className="relative bg-gradient-to-br from-primary-600 to-primary-900 text-white overflow-hidden">
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                <nav className="container mx-auto px-6 py-6 flex justify-between items-center relative z-10">
-                    <div className="text-2xl font-bold flex items-center gap-2">
-                        <BookOpen className="w-8 h-8" />
+                <nav className="container mx-auto px-4 md:px-6 py-6 flex flex-col sm:flex-row justify-between items-center gap-6 relative z-10">
+                    <div className="text-xl md:text-2xl font-bold flex items-center gap-2 text-center sm:text-left">
+                        <BookOpen className="w-6 h-6 md:w-8 md:h-8" />
                         <span>Excellence Coaching Centre</span>
                     </div>
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-wrap justify-center items-center gap-3 md:gap-6">
                         <button 
                             onClick={() => document.querySelector('footer').scrollIntoView({ behavior: 'smooth' })}
-                            className="text-primary-100 hover:text-white transition font-medium hidden md:block"
+                            className="text-primary-100 hover:text-white transition font-medium hidden lg:block text-sm md:text-base"
                         >
                             Contact
                         </button>
-                        <div className="space-x-4">
+                        <div className="flex items-center gap-2 md:gap-4">
                             {token ? (
-                                <Link to={dashboardLink} className="px-6 py-2 rounded-full bg-white text-primary-700 font-semibold hover:bg-primary-50 transition">Dashboard</Link>
+                                <Link to={dashboardLink} className="px-5 md:px-6 py-2 rounded-full bg-white text-primary-700 text-sm md:text-base font-semibold hover:bg-primary-50 transition shadow-lg">Dashboard</Link>
                             ) : (
                                 <>
-                                    <Link to="/login" className="px-6 py-2 rounded-full border border-white hover:bg-white hover:text-primary-700 transition">Login</Link>
-                                    <Link to="/register" className="px-6 py-2 rounded-full bg-white text-primary-700 font-semibold hover:bg-primary-50 transition">Get Started</Link>
+                                    <Link to="/login" className="px-4 md:px-6 py-2 rounded-full border border-white hover:bg-white hover:text-primary-700 transition text-sm md:text-base">Login</Link>
+                                    <Link to="/register" className="px-4 md:px-6 py-2 rounded-full bg-white text-primary-700 font-semibold hover:bg-primary-50 transition shadow-lg text-sm md:text-base">Get Started</Link>
                                 </>
                             )}
                         </div>
