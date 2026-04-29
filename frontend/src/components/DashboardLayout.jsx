@@ -145,7 +145,7 @@ const DashboardLayout = ({ children, role }) => {
                         {(role === 'admin' || role === 'head_admin') && headAdminName && (
                             <p className="text-primary-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 mt-1.5">
                                 <span className="w-1.5 h-1.5 bg-primary-600 rounded-full animate-pulse"></span>
-                                Principal: {headAdminName}
+                                Principal Authority: {headAdminName}
                             </p>
                         )}
                         <p className="text-slate-400 text-sm font-medium mt-1">Here's your summary for today</p>
