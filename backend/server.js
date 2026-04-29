@@ -66,9 +66,10 @@ const connectDB = async () => {
         await mongoose.connect(uri);
         console.log('MongoDB connected successfully');
 
-        // Initial Head Admin Seeding (Required for first-time access)
+// Initial Head Admin Seeding (Required for first-time access)
         const User = require('./models/User');
         const AdminProfile = require('./models/AdminProfile');
+        const bcrypt = require('bcryptjs');
 
         let headAdmin = await User.findOne({ role: 'head_admin' });
         
@@ -83,14 +84,21 @@ const connectDB = async () => {
             await headAdmin.save();
             console.log('Head Admin user seeded.');
         } else if (process.env.ADMIN_PASSWORD) {
-            // Synchronize password if environment variable is provided
-            headAdmin.password = process.env.ADMIN_PASSWORD;
-            // Also ensure name and email match if provided
-            if (process.env.ADMIN_NAME) headAdmin.name = process.env.ADMIN_NAME;
-            if (process.env.ADMIN_EMAIL) headAdmin.email = process.env.ADMIN_EMAIL;
-            
-            await headAdmin.save();
-            console.log('Head Admin credentials synchronized from .env');
+            // Check if password actually needs update to avoid heavy bcrypt hashing on every restart
+            const isMatch = await bcrypt.compare(process.env.ADMIN_PASSWORD, headAdmin.password);
+            const needsNameUpdate = process.env.ADMIN_NAME && headAdmin.name !== process.env.ADMIN_NAME;
+            const needsEmailUpdate = process.env.ADMIN_EMAIL && headAdmin.email !== process.env.ADMIN_EMAIL;
+
+            if (!isMatch || needsNameUpdate || needsEmailUpdate) {
+                if (!isMatch) headAdmin.password = process.env.ADMIN_PASSWORD;
+                if (needsNameUpdate) headAdmin.name = process.env.ADMIN_NAME;
+                if (needsEmailUpdate) headAdmin.email = process.env.ADMIN_EMAIL;
+                
+                await headAdmin.save();
+                console.log('Head Admin credentials updated from .env');
+            } else {
+                console.log('Head Admin credentials already up-to-date.');
+            }
         }
 
         // Ensure Head Admin has a profile
@@ -111,7 +119,6 @@ const connectDB = async () => {
     }
 };
 
-connectDB();
 
 // Basic Route
 app.get('/', (req, res) => {
@@ -145,6 +152,10 @@ app.get('/api/public/teachers', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// Start Server after DB Connection
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
 });
+

@@ -20,6 +20,7 @@ const Login = () => {
             sessionStorage.setItem('token', data.token);
             sessionStorage.setItem('user', JSON.stringify(data.user));
             
+            // Keep loading true during navigation
             if (data.user.role === 'admin' || data.user.role === 'head_admin') {
                 navigate('/admin');
             } else {
@@ -27,8 +28,7 @@ const Login = () => {
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed');
-        } finally {
-            setLoading(false);
+            setLoading(false); // Only stop loading if there was an error
         }
     };
 

@@ -40,17 +40,37 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        
+        console.time(`[Performance] Login Total: ${email}`);
+        
+        console.time(`[Performance] DB Lookup: ${email}`);
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+        console.timeEnd(`[Performance] DB Lookup: ${email}`);
 
+        if (!user) {
+            console.timeEnd(`[Performance] Login Total: ${email}`);
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
+
+        console.time(`[Performance] Password Compare: ${email}`);
         const isMatch = await user.comparePassword(password);
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+        console.timeEnd(`[Performance] Password Compare: ${email}`);
+
+        if (!isMatch) {
+            console.timeEnd(`[Performance] Login Total: ${email}`);
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
 
         if (!user.isApproved && user.role === 'student') {
+            console.timeEnd(`[Performance] Login Total: ${email}`);
             return res.status(403).json({ message: 'Your account is pending approval. Please contact the Head Admin.' });
         }
         
+        console.time(`[Performance] JWT Sign: ${email}`);
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        console.timeEnd(`[Performance] JWT Sign: ${email}`);
+
+        console.timeEnd(`[Performance] Login Total: ${email}`);
         res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
     } catch (err) {
         res.status(500).json({ message: err.message });
