@@ -66,7 +66,7 @@ const AdminDashboard = () => {
         { label: 'Classes Today', value: stats.classesToday, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50' },
         { label: 'Notice Board', value: stats.totalAnnouncements, icon: Bell, color: 'text-rose-600', bg: 'bg-rose-50' },
         ...(isHeadAdmin ? [
-            { label: 'Fees Paid', value: stats.feesPaidCount, icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: 'Fees Paid (Month)', value: stats.feesPaidCount, icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
             { label: 'Fees Pending', value: stats.feesPendingCount, icon: Wallet, color: 'text-orange-600', bg: 'bg-orange-50' },
         ] : []),
     ];
@@ -154,7 +154,7 @@ const AdminDashboard = () => {
                                         </td>
                                         {isHeadAdmin && (
                                             <td className="px-8 py-4 text-right">
-                                                <div className={`w-2 h-2 rounded-full ml-auto ${student.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-orange-500'}`}></div>
+                                                <div className={`w-2 h-2 rounded-full ml-auto ${student.currentMonthStatus === 'paid' ? 'bg-emerald-500' : 'bg-orange-500'}`}></div>
                                             </td>
                                         )}
                                     </tr>

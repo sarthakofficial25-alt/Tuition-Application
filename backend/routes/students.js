@@ -57,12 +57,25 @@ router.get('/', auth, admin, async (req, res) => {
         
         const profiles = await StudentProfile.find({ user: { $in: approvedUserIds } }, projection).populate('user', 'name email role createdAt').lean();
         
-        const data = profiles.map(profile => ({
-            ...profile,
-            joiningDate: (profile.user && profile.user.createdAt) 
-                         ? profile.user.createdAt 
-                         : (profile.createdAt || new Date())
-        }));
+        const now = new Date();
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const currentMonthName = months[now.getMonth()];
+        const currentYear = now.getFullYear();
+
+        const data = profiles.map(profile => {
+            // Calculate current month status
+            const hasPaidThisMonth = profile.paymentHistory?.some(p => 
+                p.month === currentMonthName && p.year === currentYear
+            );
+
+            return {
+                ...profile,
+                currentMonthStatus: hasPaidThisMonth ? 'paid' : 'pending',
+                joiningDate: (profile.user && profile.user.createdAt) 
+                             ? profile.user.createdAt 
+                             : (profile.createdAt || new Date())
+            };
+        });
         
         res.json(data);
     } catch (err) {
@@ -110,14 +123,24 @@ router.put('/:id', auth, admin, async (req, res) => {
             if (newPayment && newPayment.date) {
                 const dateObj = new Date(newPayment.date);
                 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                const monthName = months[dateObj.getMonth()];
+                
+                // Use provided month/year if available, otherwise derive from date
+                const monthName = newPayment.month || months[dateObj.getMonth()];
+                const year = newPayment.year || dateObj.getFullYear();
                 
                 profile.paymentHistory.push({
                     date: dateObj,
                     month: monthName,
+                    year: year,
                     amount: newPayment.amount || 0,
                     remarks: newPayment.remarks || ''
                 });
+                
+                // If recording payment for CURRENT month, also update the main status
+                const now = new Date();
+                if (monthName === months[now.getMonth()] && year === now.getFullYear()) {
+                    profile.paymentStatus = 'paid';
+                }
             }
         }
 

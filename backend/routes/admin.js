@@ -33,7 +33,11 @@ router.get('/all-faculty', auth, async (req, res) => {
 // Get dashboard stats
 router.get('/stats', auth, admin, async (req, res) => {
     try {
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        const now = new Date();
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const currentMonthName = months[now.getMonth()];
+        const currentYear = now.getFullYear();
+        const today = now.toLocaleDateString('en-US', { weekday: 'long' });
 
         const approvedStudents = await User.find({ isApproved: true, role: 'student' }).select('_id').lean();
         const approvedUserIds = approvedStudents.map(s => s._id);
@@ -51,7 +55,12 @@ router.get('/stats', auth, admin, async (req, res) => {
             Announcement.countDocuments(),
             StudentProfile.countDocuments({ 
                 user: { $in: approvedUserIds },
-                paymentStatus: 'paid' 
+                paymentHistory: {
+                    $elemMatch: {
+                        month: currentMonthName,
+                        year: currentYear
+                    }
+                }
             })
         ]);
 

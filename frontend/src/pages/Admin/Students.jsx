@@ -27,6 +27,9 @@ const Students = () => {
     // Payment History States
     const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const [paymentMonth, setPaymentMonth] = useState(months[new Date().getMonth()]);
+    const [paymentYear, setPaymentYear] = useState(new Date().getFullYear());
     const [paymentAmount, setPaymentAmount] = useState('');
     const [paymentToDelete, setPaymentToDelete] = useState(null);
     const [isDeletingPayment, setIsDeletingPayment] = useState(false);
@@ -89,7 +92,7 @@ const Students = () => {
         const matchesSearch = student.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             student.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesClass = classFilter === 'all' || student.class.toString() === classFilter;
-        const matchesStatus = statusFilter === 'all' || student.paymentStatus === statusFilter;
+        const matchesStatus = statusFilter === 'all' || student.currentMonthStatus === statusFilter;
         return matchesSearch && matchesClass && matchesStatus;
     });
 
@@ -140,8 +143,10 @@ const Students = () => {
                 paymentStatus: 'paid',
                 newPayment: {
                     date: paymentDate,
+                    month: paymentMonth,
+                    year: paymentYear,
                     amount: paymentAmount,
-                    remarks: `Fee payment recorded on ${new Date().toLocaleDateString()}`
+                    remarks: `Fee payment recorded for ${paymentMonth} ${paymentYear} on ${new Date().toLocaleDateString()}`
                 }
             });
 
@@ -514,9 +519,9 @@ const Students = () => {
                                 <p className="text-slate-500 text-sm mb-6">{selectedStudent.user?.email}</p>
                                 {isHeadAdmin && (
                                     <span className={`px-6 py-2 rounded-2xl text-xs font-black uppercase tracking-widest shadow-sm ${
-                                        selectedStudent.paymentStatus === 'paid' ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100' : 'bg-orange-50 text-orange-600 ring-1 ring-orange-100'
+                                        selectedStudent.currentMonthStatus === 'paid' ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100' : 'bg-orange-50 text-orange-600 ring-1 ring-orange-100'
                                     }`}>
-                                        {selectedStudent.paymentStatus}
+                                        {selectedStudent.currentMonthStatus === 'paid' ? 'Paid this Month' : 'Pending Fee'}
                                     </span>
                                 )}
                             </div>
@@ -597,21 +602,13 @@ const Students = () => {
                                     </div>
                                     {isHeadAdmin && (
                                         <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Current Fee Status</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Month Status</label>
                                             <div className="flex items-center gap-2 mt-1">
-                                                {['pending', 'paid'].map(status => (
-                                                    <button
-                                                        key={status}
-                                                        onClick={() => handleStatusChange(status)}
-                                                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                                                            selectedStudent.paymentStatus === status
-                                                                ? (status === 'paid' ? 'bg-emerald-50 text-white shadow-lg shadow-emerald-100' : 'bg-orange-50 text-white shadow-lg shadow-orange-100')
-                                                                : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
-                                                        }`}
-                                                    >
-                                                        {status}
-                                                    </button>
-                                                ))}
+                                                <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${
+                                                    selectedStudent.currentMonthStatus === 'paid' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'bg-orange-500 text-white shadow-lg shadow-orange-100'
+                                                }`}>
+                                                    {selectedStudent.currentMonthStatus === 'paid' ? 'Paid' : 'Pending'}
+                                                </span>
                                             </div>
                                         </div>
                                     )}
@@ -650,7 +647,7 @@ const Students = () => {
                                             initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                                             className="bg-slate-50 p-8 rounded-3xl mb-8 border border-slate-100"
                                         >
-                                            <div className="grid sm:grid-cols-2 gap-6">
+                                            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                                 <div>
                                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Payment Date</label>
                                                     <input 
@@ -661,10 +658,30 @@ const Students = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Amount (Optional)</label>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">For Month</label>
+                                                    <select 
+                                                        value={paymentMonth}
+                                                        onChange={(e) => setPaymentMonth(e.target.value)}
+                                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                                    >
+                                                        {months.map(m => <option key={m} value={m}>{m}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">For Year</label>
+                                                    <select 
+                                                        value={paymentYear}
+                                                        onChange={(e) => setPaymentYear(Number(e.target.value))}
+                                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                                    >
+                                                        {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Amount</label>
                                                     <input 
                                                         type="number" 
-                                                        placeholder="Enter amount"
+                                                        placeholder="Amount"
                                                         value={paymentAmount}
                                                         onChange={(e) => setPaymentAmount(e.target.value)}
                                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
@@ -695,7 +712,7 @@ const Students = () => {
                                                     <tbody className="divide-y divide-slate-50">
                                                         {selectedStudent.paymentHistory.slice().reverse().map((pay, i) => (
                                                             <tr key={i} className="group">
-                                                                <td className="py-4 px-2 font-bold text-slate-800">{pay.month}</td>
+                                                                <td className="py-4 px-2 font-bold text-slate-800">{pay.month} {pay.year}</td>
                                                                 <td className="py-4 px-2 text-slate-400 text-sm">{new Date(pay.date).toLocaleDateString('en-IN')}</td>
                                                                 <td className="py-4 px-2 font-bold text-slate-600">₹{pay.amount || 0}</td>
                                                                 <td className="py-4 px-2 text-right flex items-center justify-end gap-3">
@@ -862,12 +879,12 @@ const Students = () => {
                                             {isHeadAdmin && (
                                                 <td className="px-8 py-5">
                                                     <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit ${
-                                                        student.paymentStatus === 'paid' 
+                                                        student.currentMonthStatus === 'paid' 
                                                             ? 'bg-green-100 text-green-700' 
                                                             : 'bg-amber-100 text-amber-700'
                                                     }`}>
-                                                        <div className={`w-1.5 h-1.5 rounded-full ${student.paymentStatus === 'paid' ? 'bg-green-500' : 'bg-amber-500'}`}></div>
-                                                        {student.paymentStatus}
+                                                        <div className={`w-1.5 h-1.5 rounded-full ${student.currentMonthStatus === 'paid' ? 'bg-green-500' : 'bg-amber-500'}`}></div>
+                                                        {student.currentMonthStatus === 'paid' ? 'Paid' : 'Pending'}
                                                     </span>
                                                 </td>
                                             )}

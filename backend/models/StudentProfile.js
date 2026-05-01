@@ -12,6 +12,7 @@ const StudentProfileSchema = new mongoose.Schema({
         {
             date: { type: Date, required: true },
             month: { type: String, required: true }, // e.g. "January"
+            year: { type: Number, required: true },  // e.g. 2024
             amount: { type: Number },
             remarks: { type: String }
         }
