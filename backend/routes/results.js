@@ -7,7 +7,14 @@ const { auth, admin } = require('../middleware/auth');
 // Get my results (Student)
 router.get('/my', auth, async (req, res) => {
     try {
-        const results = await Result.find({ student: req.user.id }).sort({ createdAt: -1 });
+        const { limit } = req.query;
+        let query = Result.find({ student: req.user.id }).sort({ createdAt: -1 });
+        
+        if (limit) {
+            query = query.limit(parseInt(limit));
+        }
+
+        const results = await query;
         res.json(results);
     } catch (err) {
         res.status(500).json({ message: err.message });

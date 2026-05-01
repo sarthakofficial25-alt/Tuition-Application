@@ -7,11 +7,19 @@ const StudentProfile = require('../models/StudentProfile');
 // Get announcements (filtered for students, all for admin)
 router.get('/', auth, async (req, res) => {
     try {
+        const { limit } = req.query;
+        
         // Admins and Head Admins see everything
         if (req.user.role === 'admin' || req.user.role === 'head_admin') {
-            const announcements = await Announcement.find()
+            let query = Announcement.find()
                 .populate('targetStudent', 'name email')
                 .sort({ createdAt: -1 });
+            
+            if (limit) {
+                query = query.limit(parseInt(limit));
+            }
+            
+            const announcements = await query;
             return res.json(announcements);
         }
 
@@ -19,7 +27,7 @@ router.get('/', auth, async (req, res) => {
         const profile = await StudentProfile.findOne({ user: req.user.id });
         const studentClass = profile ? String(profile.class) : null;
 
-        const query = {
+        const filter = {
             $or: [
                 // Legacy support: Announcements without targetType are visible to all
                 { targetType: { $exists: false } },
@@ -31,7 +39,13 @@ router.get('/', auth, async (req, res) => {
             ]
         };
 
-        const announcements = await Announcement.find(query).sort({ createdAt: -1 });
+        let query = Announcement.find(filter).sort({ createdAt: -1 });
+        
+        if (limit) {
+            query = query.limit(parseInt(limit));
+        }
+
+        const announcements = await query;
         res.json(announcements);
     } catch (err) {
         res.status(500).json({ message: err.message });

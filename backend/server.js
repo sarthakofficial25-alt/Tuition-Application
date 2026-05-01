@@ -4,10 +4,12 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
+const compression = require('compression');
 
 dotenv.config();
 
 const app = express();
+app.use(compression());
 const PORT = process.env.PORT || 5000;
 
 // Middleware

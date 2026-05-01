@@ -15,10 +15,10 @@ const StudentDashboard = () => {
         const fetchData = async () => {
             try {
                 const [hw, sch, res, ann] = await Promise.all([
-                    API.get('/homework/my'),
+                    API.get('/homework/my?limit=3'),
                     API.get('/schedule/my'),
-                    API.get('/results/my'),
-                    API.get('/announcements')
+                    API.get('/results/my?limit=5'),
+                    API.get('/announcements?limit=3')
                 ]);
                 setData({
                     homework: hw.data,

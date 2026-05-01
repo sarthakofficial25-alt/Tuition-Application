@@ -67,6 +67,7 @@ const addMonthlyStatus = (profile) => {
 // Get all students (Admin only)
 router.get('/', auth, admin, async (req, res) => {
     try {
+        const { limit, sort } = req.query;
         const isHeadAdmin = req.user.role === 'head_admin';
         // If not head admin, exclude sensitive fee data
         const projection = isHeadAdmin ? {} : { paymentStatus: 0, paymentHistory: 0 };
@@ -75,8 +76,18 @@ router.get('/', auth, admin, async (req, res) => {
         const approvedUsers = await User.find({ role: 'student', isApproved: true }).select('_id');
         const approvedUserIds = approvedUsers.map(u => u._id);
         
-        const profiles = await StudentProfile.find({ user: { $in: approvedUserIds } }, projection).populate('user', 'name email role createdAt').lean();
+        let query = StudentProfile.find({ user: { $in: approvedUserIds } }, projection);
         
+        // Sort and limit if provided
+        if (sort === 'newest') {
+            query = query.sort({ createdAt: -1 });
+        }
+        
+        if (limit) {
+            query = query.limit(parseInt(limit));
+        }
+
+        const profiles = await query.populate('user', 'name email role createdAt').lean();
         const data = profiles.map(profile => addMonthlyStatus(profile));
         
         res.json(data);

@@ -22,31 +22,24 @@ const AdminDashboard = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // Fetch basic stats
-                try {
-                    const statsRes = await API.get('/admin/stats');
-                    setStats(prev => ({ ...prev, ...statsRes.data }));
-                } catch (err) { console.error('Stats error:', err); }
+                // Fetch all dashboard data in parallel
+                const [statsRes, studentsRes, headAdminRes, announcementsRes] = await Promise.all([
+                    API.get('/admin/stats').catch(err => { console.error('Stats error:', err); return { data: {} }; }),
+                    API.get('/students?limit=4&sort=newest').catch(err => { console.error('Students error:', err); return { data: [] }; }),
+                    API.get('/auth/head-admin').catch(err => { console.error('Head admin error:', err); return { data: {} }; }),
+                    API.get('/announcements?limit=3').catch(err => { console.error('Announcements error:', err); return { data: [] }; })
+                ]);
 
-                // Fetch students for recent list
-                try {
-                    const studentsRes = await API.get('/students');
-                    setStats(prev => ({ ...prev, recentStudents: studentsRes.data.slice(0, 5).reverse() }));
-                } catch (err) { console.error('Students error:', err); }
+                setStats(prev => ({ 
+                    ...prev, 
+                    ...statsRes.data,
+                    recentStudents: studentsRes.data || [],
+                    announcements: announcementsRes.data || []
+                }));
 
-                // Fetch head admin name
-                try {
-                    const headAdminRes = await API.get('/auth/head-admin');
-                    if (headAdminRes.data && headAdminRes.data.name) {
-                        setHeadAdminName(headAdminRes.data.name);
-                    }
-                } catch (err) { console.error('Head admin name error:', err); }
-
-                // Fetch announcements
-                try {
-                    const announcementsRes = await API.get('/announcements');
-                    setStats(prev => ({ ...prev, announcements: announcementsRes.data.slice(0, 3) }));
-                } catch (err) { console.error('Announcements error:', err); }
+                if (headAdminRes.data && headAdminRes.data.name) {
+                    setHeadAdminName(headAdminRes.data.name);
+                }
 
             } catch (err) {
                 console.error('Failed to fetch dashboard data:', err);

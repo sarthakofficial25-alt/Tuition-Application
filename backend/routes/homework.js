@@ -7,15 +7,22 @@ const StudentProfile = require('../models/StudentProfile');
 // Get homework for student's class
 router.get('/my', auth, async (req, res) => {
     try {
+        const { limit } = req.query;
         const profile = await StudentProfile.findOne({ user: req.user.id });
         if (!profile) return res.status(404).json({ message: 'Profile not found' });
 
-        const homework = await Homework.find({
+        let query = Homework.find({
             $or: [
                 { targetClasses: profile.class },
                 { targetClasses: 'All' }
             ]
         }).sort({ createdAt: -1 });
+
+        if (limit) {
+            query = query.limit(parseInt(limit));
+        }
+
+        const homework = await query;
         res.json(homework);
     } catch (err) {
         res.status(500).json({ message: err.message });
