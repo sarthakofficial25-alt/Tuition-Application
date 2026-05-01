@@ -37,13 +37,14 @@ const AdminDashboard = () => {
                 // Fetch head admin name
                 try {
                     const headAdminRes = await API.get('/auth/head-admin');
-                    setHeadAdminName(headAdminRes.data.name);
+                    if (headAdminRes.data && headAdminRes.data.name) {
+                        setHeadAdminName(headAdminRes.data.name);
+                    }
                 } catch (err) { console.error('Head admin name error:', err); }
 
                 // Fetch announcements
                 try {
                     const announcementsRes = await API.get('/announcements');
-                    console.log(`Fetched ${announcementsRes.data.length} announcements for dashboard`);
                     setStats(prev => ({ ...prev, announcements: announcementsRes.data.slice(0, 3) }));
                 } catch (err) { console.error('Announcements error:', err); }
 
@@ -84,11 +85,11 @@ const AdminDashboard = () => {
             <div className="bg-white p-4 md:p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 font-black shadow-inner">
-                        {headAdminName?.[0]}
+                        {headAdminName?.[0] || (isHeadAdmin ? user.name?.[0] : '?')}
                     </div>
                     <div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Management Authority</p>
-                        <p className="text-base font-bold text-slate-800">{headAdminName}</p>
+                        <p className="text-base font-bold text-slate-800">{headAdminName || (isHeadAdmin ? user.name : 'Loading...')}</p>
                     </div>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 text-[10px] font-black text-primary-600 bg-primary-50 px-3 py-1.5 rounded-full uppercase tracking-widest">

@@ -28,7 +28,9 @@ const DashboardLayout = ({ children, role }) => {
         if (role === 'admin' || role === 'head_admin') {
             fetchHeadAdmin();
         }
+    }, [role]);
 
+    React.useEffect(() => {
         const handleClickOutside = (event) => {
             if (profileRef.current && !profileRef.current.contains(event.target)) {
                 setShowProfile(false);
