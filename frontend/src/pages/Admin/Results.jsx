@@ -6,7 +6,7 @@ import {
     AlertCircle, Loader2, Search, User, Filter, MoreVertical, BookOpen,
     TrendingUp, Target, Users, Award, FileText
 } from 'lucide-react';
-import { ALL_SUBJECTS } from '../../constants/classData';
+import { ALL_SUBJECTS, ALL_CLASS_IDS } from '../../constants/classData';
 
 const AdminResults = () => {
     const [results, setResults] = useState([]);
@@ -28,7 +28,11 @@ const AdminResults = () => {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [studentSearch, setStudentSearch] = useState('');
-    const [activeTab, setActiveTab] = useState('list'); // 'list' or 'overview'
+    const [activeTab, setActiveTab] = useState('list'); // 'list', 'overview', or 'rankings'
+    
+    // Rankings State
+    const [rankingClass, setRankingClass] = useState('10');
+    const [rankingTest, setRankingTest] = useState('all');
 
     useEffect(() => {
         fetchData();
@@ -164,6 +168,29 @@ const AdminResults = () => {
         avg: (s.totalPercentage / s.count).toFixed(1)
     })).sort((a, b) => b.avg - a.avg);
 
+    // Filtered performance for Ranking tab
+    const filteredRankings = Object.values(results.filter(r => 
+        r.studentClass.toString() === rankingClass && (rankingTest === 'all' || r.testName === rankingTest)
+    ).reduce((acc, r) => {
+        const sid = r.student?._id || r.student;
+        if (!sid) return acc;
+        const sidStr = sid.toString();
+        if (!acc[sidStr]) {
+            acc[sidStr] = { student: r.student, totalPercentage: 0, count: 0, marksObtained: 0, totalMarks: 0 };
+        }
+        acc[sidStr].totalPercentage += r.percentage;
+        acc[sidStr].marksObtained += r.marksObtained;
+        acc[sidStr].totalMarks += r.totalMarks;
+        acc[sidStr].count += 1;
+        return acc;
+    }, {})).map(s => ({
+        ...s,
+        avg: (s.totalPercentage / s.count).toFixed(1)
+    })).sort((a, b) => b.avg - a.avg);
+
+    // Get available tests for selected class
+    const availableTests = [...new Set(results.filter(r => r.studentClass.toString() === rankingClass).map(r => r.testName))];
+
     // Performance Analytics
     const stats = {
         avgScore: results.length > 0 ? (results.reduce((acc, r) => acc + r.percentage, 0) / results.length).toFixed(1) : 0,
@@ -264,180 +291,292 @@ const AdminResults = () => {
                 >
                     Student Overview
                 </button>
+                <button 
+                    onClick={() => setActiveTab('rankings')}
+                    className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'rankings' ? 'bg-white text-primary-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                    Class Rankings
+                </button>
             </div>
 
-            {/* Search and Filters */}
-            <div className="flex gap-4">
-                <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input 
-                        type="text" 
-                        placeholder="Search by student, test or subject..."
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-primary-500 transition shadow-sm"
-                    />
-                </div>
-            </div>
-
-            {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-4">
-                    <Loader2 className="w-10 h-10 text-primary-600 animate-spin" />
-                    <p className="text-slate-500 font-medium">Loading results...</p>
-                </div>
-            ) : filteredResults.length === 0 ? (
-                <div className="bg-white rounded-[2rem] border-2 border-dashed border-slate-200 p-20 text-center">
-                    <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <GraduationCap className="w-10 h-10" />
+            {/* Content Rendering based on tab */}
+            {activeTab === 'rankings' ? (
+                <div className="space-y-6">
+                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col md:flex-row gap-6">
+                        <div className="flex-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Select Class</label>
+                            <div className="flex flex-wrap gap-2">
+                                {ALL_CLASS_IDS.map(c => (
+                                    <button 
+                                        key={c} onClick={() => { setRankingClass(c); setRankingTest('all'); }}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${rankingClass === c ? 'bg-primary-600 text-white border-primary-600 shadow-lg' : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'}`}
+                                    >
+                                        Class {c}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Select Test</label>
+                            <div className="flex flex-wrap gap-2">
+                                <button 
+                                    onClick={() => setRankingTest('all')}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${rankingTest === 'all' ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'}`}
+                                >
+                                    Cumulative
+                                </button>
+                                {availableTests.map(t => (
+                                    <button 
+                                        key={t} onClick={() => setRankingTest(t)}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${rankingTest === t ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'}`}
+                                    >
+                                        {t}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">No Results Found</h3>
-                    <p className="text-slate-500">Record marks for a student to see their performance here.</p>
-                </div>
-            ) : activeTab === 'list' ? (
-                <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50/50 text-slate-500 text-sm">
-                                <tr>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Student / Class</th>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Test Name / Date</th>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Subjects</th>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Score / %</th>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px] text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {filteredResults.map((res, idx) => {
-                                    const colorClass = res.percentage >= 80 ? 'text-emerald-600 bg-emerald-50' : res.percentage >= 40 ? 'text-primary-600 bg-primary-50' : 'text-red-600 bg-red-50';
-                                    
-                                    return (
-                                        <motion.tr 
-                                            key={res._id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: idx * 0.03 }}
-                                            className="group hover:bg-slate-50/50 transition-colors"
-                                        >
-                                            <td className="px-8 py-5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-500">
-                                                        {res.student?.name?.[0]}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-slate-800">{res.student?.name}</p>
-                                                        <p className="text-[10px] font-bold text-primary-600 uppercase tracking-tighter">Class {res.studentClass}</p>
-                                                    </div>
-                                                </div>
+
+                    <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50/50 text-slate-500 text-sm">
+                                    <tr>
+                                        <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Rank</th>
+                                        <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Student Name</th>
+                                        <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">{rankingTest === 'all' ? 'Tests' : 'Score'}</th>
+                                        <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Average %</th>
+                                        <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {filteredRankings.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="5" className="px-8 py-20 text-center text-slate-400 font-medium italic">
+                                                No results found for Class {rankingClass} {rankingTest !== 'all' ? ` - ${rankingTest}` : ''}
                                             </td>
-                                            <td className="px-8 py-5">
-                                                <p className="font-bold text-slate-700">{res.testName}</p>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-                                                    {(res.testDate || res.createdAt) ? new Date(res.testDate || res.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
-                                                </p>
-                                            </td>
-                                            <td className="px-8 py-5">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {(res.subjects || []).map(s => (
-                                                        <span key={s} className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold">
-                                                            {s}
+                                        </tr>
+                                    ) : (
+                                        filteredRankings.map((s, idx) => {
+                                            const colorClass = s.avg >= 80 ? 'text-emerald-600 bg-emerald-50' : s.avg >= 40 ? 'text-primary-600 bg-primary-50' : 'text-red-600 bg-red-50';
+                                            return (
+                                                <motion.tr key={idx} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
+                                                    <td className="px-8 py-6">
+                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shadow-sm ${
+                                                            idx === 0 ? 'bg-yellow-400 text-white' : idx === 1 ? 'bg-slate-300 text-white' : idx === 2 ? 'bg-orange-300 text-white' : 'bg-slate-100 text-slate-400'
+                                                        }`}>
+                                                            #{idx + 1}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-500">
+                                                                {s.student?.name?.[0]}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-800">{s.student?.name}</p>
+                                                                <p className="text-[10px] text-slate-400 font-medium">{s.student?.email}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="font-bold text-slate-700">
+                                                            {rankingTest === 'all' ? `${s.count} Tests` : `${s.marksObtained}/${s.totalMarks}`}
                                                         </span>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-5">
-                                                <div className="flex items-center gap-3">
-                                                    <span className={`px-3 py-1 rounded-lg font-bold text-sm ${colorClass}`}>
-                                                        {res.marksObtained} / {res.totalMarks}
-                                                    </span>
-                                                    <span className="text-xs text-slate-400 font-bold">{res.percentage}%</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-5 text-right">
-                                                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleOpenEdit(res)} className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition">
-                                                        <Pencil className="w-5 h-5" />
-                                                    </button>
-                                                    <button onClick={() => setDeleting(res)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition">
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </motion.tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                                                    </td>
+                                                    <td className="px-8 py-6 font-black text-slate-800 text-lg">
+                                                        {s.avg}%
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${colorClass}`}>
+                                                            {s.avg >= 80 ? 'Excellent' : s.avg >= 60 ? 'Good' : s.avg >= 40 ? 'Average' : 'Critical'}
+                                                        </span>
+                                                    </td>
+                                                </motion.tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             ) : (
-                <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50/50 text-slate-500 text-sm">
-                                <tr>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Rank</th>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Student / Class</th>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Tests Taken</th>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Average Score</th>
-                                    <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Performance</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {studentPerformance.map((s, idx) => {
-                                    const colorClass = s.avg >= 80 ? 'text-emerald-600 bg-emerald-50' : s.avg >= 40 ? 'text-primary-600 bg-primary-50' : 'text-red-600 bg-red-50';
-                                    
-                                    return (
-                                        <motion.tr 
-                                            key={idx}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            className="hover:bg-slate-50/50 transition-colors"
-                                        >
-                                            <td className="px-8 py-6">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs ${idx === 0 ? 'bg-amber-100 text-amber-600' : idx === 1 ? 'bg-slate-200 text-slate-600' : idx === 2 ? 'bg-orange-100 text-orange-600' : 'bg-slate-50 text-slate-400'}`}>
-                                                    #{idx + 1}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-500">
-                                                        {s.student?.name?.[0]}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-slate-800">{s.student?.name}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Class {s.studentClass}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg font-bold text-xs">
-                                                    {s.count} Tests
-                                                </span>
-                                            </td>
-                                            <td className="px-8 py-6 font-black text-slate-800 text-lg">
-                                                {s.avg}%
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden w-24">
-                                                        <div 
-                                                            className={`h-full rounded-full ${s.avg >= 80 ? 'bg-emerald-500' : s.avg >= 40 ? 'bg-primary-500' : 'bg-red-500'}`}
-                                                            style={{ width: `${s.avg}%` }}
-                                                        />
-                                                    </div>
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${colorClass}`}>
-                                                        {s.avg >= 80 ? 'Excellent' : s.avg >= 60 ? 'Good' : s.avg >= 40 ? 'Average' : 'Critical'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </motion.tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                <>
+                    {/* Search and Filters (Visible only in List and Overview) */}
+                    <div className="flex gap-4">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                            <input 
+                                type="text" 
+                                placeholder="Search by student, test or subject..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-primary-500 transition shadow-sm"
+                            />
+                        </div>
                     </div>
-                </div>
+
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center py-20 gap-4">
+                            <Loader2 className="w-10 h-10 text-primary-600 animate-spin" />
+                            <p className="text-slate-500 font-medium">Loading results...</p>
+                        </div>
+                    ) : filteredResults.length === 0 ? (
+                        <div className="bg-white rounded-[2rem] border-2 border-dashed border-slate-200 p-20 text-center">
+                            <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <GraduationCap className="w-10 h-10" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">No Results Found</h3>
+                            <p className="text-slate-500">Record marks for a student to see their performance here.</p>
+                        </div>
+                    ) : activeTab === 'list' ? (
+                        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50/50 text-slate-500 text-sm">
+                                        <tr>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Student / Class</th>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Test Name / Date</th>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Subjects</th>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Score / %</th>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px] text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {filteredResults.map((res, idx) => {
+                                            const colorClass = res.percentage >= 80 ? 'text-emerald-600 bg-emerald-50' : res.percentage >= 40 ? 'text-primary-600 bg-primary-50' : 'text-red-600 bg-red-50';
+                                            
+                                            return (
+                                                <motion.tr 
+                                                    key={res._id}
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.03 }}
+                                                    className="group hover:bg-slate-50/50 transition-colors"
+                                                >
+                                                    <td className="px-8 py-5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-500">
+                                                                {res.student?.name?.[0]}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-800">{res.student?.name}</p>
+                                                                <p className="text-[10px] font-bold text-primary-600 uppercase tracking-tighter">Class {res.studentClass}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-5">
+                                                        <p className="font-bold text-slate-700">{res.testName}</p>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                                                            {(res.testDate || res.createdAt) ? new Date(res.testDate || res.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                        </p>
+                                                    </td>
+                                                    <td className="px-8 py-5">
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {(res.subjects || []).map(s => (
+                                                                <span key={s} className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                                                    {s}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-5">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className={`px-3 py-1 rounded-lg font-bold text-sm ${colorClass}`}>
+                                                                {res.marksObtained} / {res.totalMarks}
+                                                            </span>
+                                                            <span className="text-xs text-slate-400 font-bold">{res.percentage}%</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-5 text-right">
+                                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button onClick={() => handleOpenEdit(res)} className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition">
+                                                                <Pencil className="w-5 h-5" />
+                                                            </button>
+                                                            <button onClick={() => setDeleting(res)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition">
+                                                                <Trash2 className="w-5 h-5" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50/50 text-slate-500 text-sm">
+                                        <tr>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Rank</th>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Student / Class</th>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Tests Taken</th>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Average Score</th>
+                                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-[10px]">Performance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {studentPerformance.map((s, idx) => {
+                                            const colorClass = s.avg >= 80 ? 'text-emerald-600 bg-emerald-50' : s.avg >= 40 ? 'text-primary-600 bg-primary-50' : 'text-red-600 bg-red-50';
+                                            
+                                            return (
+                                                <motion.tr 
+                                                    key={idx}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: idx * 0.05 }}
+                                                    className="hover:bg-slate-50/50 transition-colors"
+                                                >
+                                                    <td className="px-8 py-6">
+                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs ${idx === 0 ? 'bg-amber-100 text-amber-600' : idx === 1 ? 'bg-slate-200 text-slate-600' : idx === 2 ? 'bg-orange-100 text-orange-600' : 'bg-slate-50 text-slate-400'}`}>
+                                                            #{idx + 1}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-500">
+                                                                {s.student?.name?.[0]}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-800">{s.student?.name}</p>
+                                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Class {s.studentClass}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg font-bold text-xs">
+                                                            {s.count} Tests
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-8 py-6 font-black text-slate-800 text-lg">
+                                                        {s.avg}%
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden w-24">
+                                                                <div 
+                                                                    className={`h-full rounded-full ${s.avg >= 80 ? 'bg-emerald-500' : s.avg >= 40 ? 'bg-primary-500' : 'bg-red-500'}`}
+                                                                    style={{ width: `${s.avg}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${colorClass}`}>
+                                                                {s.avg >= 80 ? 'Excellent' : s.avg >= 60 ? 'Good' : s.avg >= 40 ? 'Average' : 'Critical'}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Modal */}

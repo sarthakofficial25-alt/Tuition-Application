@@ -14,22 +14,67 @@ router.get('/my', auth, async (req, res) => {
     }
 });
 
+// Get all unique tests for my class
+router.get('/tests', auth, async (req, res) => {
+    try {
+        const { className } = req.query;
+        let targetClass = className;
+        
+        if (!targetClass) {
+            const profile = await StudentProfile.findOne({ user: req.user.id });
+            if (profile) targetClass = profile.class;
+        }
+
+        if (!targetClass) return res.status(400).json({ message: 'Class context required' });
+
+        const tests = await Result.find({ studentClass: targetClass }).distinct('testName');
+        res.json(tests);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Get leaderboard for a specific test and class
 router.get('/leaderboard', auth, async (req, res) => {
     try {
-        const { testName } = req.query;
-        const profile = await StudentProfile.findOne({ user: req.user.id });
-        if (!profile) return res.status(404).json({ message: 'Profile not found' });
+        const { testName, className } = req.query;
+        let targetClass = className;
 
-        const query = { studentClass: profile.class };
+        if (!targetClass) {
+            const profile = await StudentProfile.findOne({ user: req.user.id });
+            if (!profile) return res.status(404).json({ message: 'Profile not found' });
+            targetClass = profile.class;
+        }
+
+        const query = { studentClass: targetClass };
         if (testName) query.testName = testName;
 
-        const leaderboard = await Result.find(query)
-            .populate('student', 'name')
-            .sort({ marksObtained: -1 })
-            .lean();
+        // If testName is provided, return rankings for that test
+        if (testName) {
+            const leaderboard = await Result.find(query)
+                .populate('student', 'name email')
+                .sort({ marksObtained: -1 })
+                .lean();
+            return res.json(leaderboard);
+        }
 
-        res.json(leaderboard);
+        // If no testName, return cumulative rankings (avg percentage per student)
+        const results = await Result.find(query).populate('student', 'name email').lean();
+        const performance = Object.values(results.reduce((acc, r) => {
+            const sid = r.student?._id.toString();
+            if (!sid) return acc;
+            if (!acc[sid]) {
+                acc[sid] = { student: r.student, totalPercentage: 0, count: 0 };
+            }
+            acc[sid].totalPercentage += r.percentage;
+            acc[sid].count += 1;
+            return acc;
+        }, {})).map(s => ({
+            ...s,
+            avg: Math.round((s.totalPercentage / s.count) * 100) / 100
+        })).sort((a, b) => b.avg - a.avg);
+
+        res.json(performance);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
