@@ -44,6 +44,26 @@ router.post('/', auth, admin, async (req, res) => {
     }
 });
 
+// Helper to add currentMonthStatus to profile
+const addMonthlyStatus = (profile) => {
+    const now = new Date();
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const currentMonthName = months[now.getMonth()];
+    const currentYear = now.getFullYear();
+
+    const hasPaidThisMonth = profile.paymentHistory?.some(p => 
+        p.month === currentMonthName && p.year === currentYear
+    );
+
+    return {
+        ...profile,
+        currentMonthStatus: hasPaidThisMonth ? 'paid' : 'pending',
+        joiningDate: (profile.user && profile.user.createdAt) 
+                     ? profile.user.createdAt 
+                     : (profile.createdAt || new Date())
+    };
+};
+
 // Get all students (Admin only)
 router.get('/', auth, admin, async (req, res) => {
     try {
@@ -57,25 +77,7 @@ router.get('/', auth, admin, async (req, res) => {
         
         const profiles = await StudentProfile.find({ user: { $in: approvedUserIds } }, projection).populate('user', 'name email role createdAt').lean();
         
-        const now = new Date();
-        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const currentMonthName = months[now.getMonth()];
-        const currentYear = now.getFullYear();
-
-        const data = profiles.map(profile => {
-            // Calculate current month status
-            const hasPaidThisMonth = profile.paymentHistory?.some(p => 
-                p.month === currentMonthName && p.year === currentYear
-            );
-
-            return {
-                ...profile,
-                currentMonthStatus: hasPaidThisMonth ? 'paid' : 'pending',
-                joiningDate: (profile.user && profile.user.createdAt) 
-                             ? profile.user.createdAt 
-                             : (profile.createdAt || new Date())
-            };
-        });
+        const data = profiles.map(profile => addMonthlyStatus(profile));
         
         res.json(data);
     } catch (err) {
@@ -117,12 +119,31 @@ router.put('/:id', auth, admin, async (req, res) => {
         // Regular admin can update name, email, phone, address, schoolName
         // But only Head Admin can update payment info
         if (isHeadAdmin) {
+            const oldStatus = profile.paymentStatus;
             profile.paymentStatus = paymentStatus || profile.paymentStatus;
+
+            const now = new Date();
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const currentMonthName = months[now.getMonth()];
+            const currentYear = now.getFullYear();
+
+            // Quick Toggle Logic: If status changed to 'paid' manually without a history record, create one
+            if (paymentStatus === 'paid' && !newPayment) {
+                const hasRecord = profile.paymentHistory.some(p => p.month === currentMonthName && p.year === currentYear);
+                if (!hasRecord) {
+                    profile.paymentHistory.push({
+                        date: now,
+                        month: currentMonthName,
+                        year: currentYear,
+                        amount: 0,
+                        remarks: 'Manually marked as paid'
+                    });
+                }
+            }
 
             // Add to payment history if newPayment is provided
             if (newPayment && newPayment.date) {
                 const dateObj = new Date(newPayment.date);
-                const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
                 
                 // Use provided month/year if available, otherwise derive from date
                 const monthName = newPayment.month || months[dateObj.getMonth()];
@@ -137,16 +158,15 @@ router.put('/:id', auth, admin, async (req, res) => {
                 });
                 
                 // If recording payment for CURRENT month, also update the main status
-                const now = new Date();
-                if (monthName === months[now.getMonth()] && year === now.getFullYear()) {
+                if (monthName === currentMonthName && year === currentYear) {
                     profile.paymentStatus = 'paid';
                 }
             }
         }
 
         await profile.save();
-        const updated = await StudentProfile.findById(profile._id).populate('user', 'name email');
-        res.json(updated);
+        const updated = await StudentProfile.findById(profile._id).populate('user', 'name email role createdAt').lean();
+        res.json(addMonthlyStatus(updated));
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

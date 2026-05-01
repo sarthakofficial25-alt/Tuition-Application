@@ -104,10 +104,11 @@ const Students = () => {
             });
             
             // Update the main list
-            setStudents(students.map(s => s._id === selectedStudent._id ? { ...s, paymentStatus: newStatus } : s));
+            setStudents(students.map(s => s._id === selectedStudent._id ? data : s));
             
             // Update the current view
-            setSelectedStudent({ ...selectedStudent, paymentStatus: newStatus });
+            setSelectedStudent(data);
+            alert(`Fee status updated to ${newStatus}`);
         } catch (err) {
             console.error(err);
             alert('Failed to update fee status');
@@ -604,11 +605,19 @@ const Students = () => {
                                         <div>
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Month Status</label>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${
-                                                    selectedStudent.currentMonthStatus === 'paid' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'bg-orange-500 text-white shadow-lg shadow-orange-100'
-                                                }`}>
-                                                    {selectedStudent.currentMonthStatus === 'paid' ? 'Paid' : 'Pending'}
-                                                </span>
+                                                {['pending', 'paid'].map(status => (
+                                                    <button
+                                                        key={status}
+                                                        onClick={() => handleStatusChange(status)}
+                                                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                                                            selectedStudent.currentMonthStatus === status
+                                                                ? (status === 'paid' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'bg-orange-500 text-white shadow-lg shadow-orange-100')
+                                                                : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
+                                                        }`}
+                                                    >
+                                                        {status}
+                                                    </button>
+                                                ))}
                                             </div>
                                         </div>
                                     )}
