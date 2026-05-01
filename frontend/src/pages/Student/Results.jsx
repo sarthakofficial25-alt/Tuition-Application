@@ -8,6 +8,10 @@ import API from '../../api/api';
 
 const StudentResults = () => {
     const [results, setResults] = useState([]);
+    const [leaderboard, setLeaderboard] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('my');
+    const [selectedTest, setSelectedTest] = useState('');
     const [allTests, setAllTests] = useState([]);
     const [cumulativeMode, setCumulativeMode] = useState(true);
 
@@ -233,8 +237,8 @@ const StudentResults = () => {
                                         ) : (
                                             leaderboard.map((entry, idx) => (
                                                 <div 
-                                                    key={entry._id || entry.student._id}
-                                                    className={`flex items-center justify-between p-6 rounded-3xl transition-all ${entry.student._id === (results[0]?.student?._id || results[0]?.student) ? 'bg-primary-50 ring-2 ring-primary-100' : 'hover:bg-slate-50'}`}
+                                                    key={entry._id || entry.student?._id}
+                                                    className={`flex items-center justify-between p-6 rounded-3xl transition-all ${entry.student?._id === (results[0]?.student?._id || results[0]?.student) ? 'bg-primary-50 ring-2 ring-primary-100' : 'hover:bg-slate-50'}`}
                                                 >
                                                     <div className="flex items-center gap-6">
                                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base shadow-sm ${
@@ -247,8 +251,8 @@ const StudentResults = () => {
                                                         </div>
                                                         <div>
                                                             <p className="font-black text-slate-800 flex items-center gap-2">
-                                                                {entry.student.name} 
-                                                                {entry.student._id === (results[0]?.student?._id || results[0]?.student) && (
+                                                                {entry.student?.name || 'Unknown Student'} 
+                                                                {entry.student?._id === (results[0]?.student?._id || results[0]?.student) && (
                                                                     <span className="text-[9px] bg-primary-600 text-white px-2 py-0.5 rounded-full uppercase tracking-widest shadow-sm">You</span>
                                                                 )}
                                                             </p>
