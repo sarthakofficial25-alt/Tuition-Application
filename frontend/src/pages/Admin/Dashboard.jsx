@@ -11,7 +11,8 @@ const AdminDashboard = () => {
         totalAnnouncements: 0,
         feesPaidCount: 0,
         feesPendingCount: 0,
-        recentStudents: []
+        recentStudents: [],
+        announcements: []
     });
     const [loading, setLoading] = useState(true);
 
@@ -21,15 +22,17 @@ const AdminDashboard = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [statsRes, studentsRes, headAdminRes] = await Promise.all([
+                const [statsRes, studentsRes, headAdminRes, announcementsRes] = await Promise.all([
                     API.get('/admin/stats'),
                     API.get('/students'),
-                    API.get('/auth/head-admin')
+                    API.get('/auth/head-admin'),
+                    API.get('/announcements')
                 ]);
                 
                 setStats({
                     ...statsRes.data,
-                    recentStudents: studentsRes.data.slice(0, 5).reverse()
+                    recentStudents: studentsRes.data.slice(0, 5).reverse(),
+                    announcements: announcementsRes.data.slice(0, 3)
                 });
                 setHeadAdminName(headAdminRes.data.name);
             } catch (err) {
@@ -103,65 +106,83 @@ const AdminDashboard = () => {
                 ))}
             </div>
 
-            {/* Recent Students Table */}
-            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-                    <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
-                        <Users className="w-6 h-6 text-primary-600" /> Recent Registrations
-                    </h2>
-                    <span className="text-xs font-bold text-slate-400">Latest 5 Students</span>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-white text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-50">
-                            <tr>
-                                <th className="px-8 py-5">Name</th>
-                                <th className="px-8 py-5">Class</th>
-                                <th className="px-8 py-5">Phone</th>
-                                {isHeadAdmin && <th className="px-8 py-5 text-right">Fee Status</th>}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {stats.recentStudents.map((student, idx) => (
-                                <motion.tr 
-                                    key={student._id}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    className="hover:bg-slate-50/50 transition-colors group"
-                                >
-                                    <td className="px-8 py-5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-slate-500 group-hover:bg-primary-100 group-hover:text-primary-600 transition-colors">
-                                                {student.user?.name?.[0] || 'S'}
-                                            </div>
-                                            <span className="font-bold text-slate-800">{student.user?.name || 'Unknown Student'}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-5">
-                                        <span className="text-xs font-black text-primary-600 bg-primary-50 px-2 py-1 rounded-md">Class {student.class}</span>
-                                    </td>
-                                    <td className="px-8 py-5 text-slate-500 text-sm font-medium">{student.phoneNumber}</td>
-                                    {isHeadAdmin && (
-                                        <td className="px-8 py-5 text-right">
-                                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm ${
-                                                student.paymentStatus === 'paid' 
-                                                ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100' 
-                                                : 'bg-orange-50 text-orange-600 ring-1 ring-orange-100'
-                                            }`}>
-                                                {student.paymentStatus}
-                                            </span>
-                                        </td>
-                                    )}
-                                </motion.tr>
-                            ))}
-                            {stats.recentStudents.length === 0 && (
+
+            {/* Notice Board Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Recent Registrations (Moved into grid) */}
+                <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                    <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+                        <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
+                            <Users className="w-6 h-6 text-primary-600" /> Recent Registrations
+                        </h2>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-white text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-50">
                                 <tr>
-                                    <td colSpan={isHeadAdmin ? "4" : "3"} className="px-8 py-20 text-center text-slate-400 italic">No students registered yet</td>
+                                    <th className="px-8 py-5">Name</th>
+                                    <th className="px-8 py-5">Class</th>
+                                    {isHeadAdmin && <th className="px-8 py-5 text-right">Fee</th>}
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {stats.recentStudents.slice(0, 4).map((student, idx) => (
+                                    <tr key={student._id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-8 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-slate-500 group-hover:bg-primary-100 group-hover:text-primary-600 transition-colors">
+                                                    {student.user?.name?.[0] || 'S'}
+                                                </div>
+                                                <span className="font-bold text-slate-800 text-sm truncate max-w-[120px]">{student.user?.name || 'Unknown'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-4">
+                                            <span className="text-[10px] font-black text-primary-600 bg-primary-50 px-2 py-1 rounded-md">Class {student.class}</span>
+                                        </td>
+                                        {isHeadAdmin && (
+                                            <td className="px-8 py-4 text-right">
+                                                <div className={`w-2 h-2 rounded-full ml-auto ${student.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-orange-500'}`}></div>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Live Notice Board */}
+                <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                    <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+                        <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
+                            <Bell className="w-6 h-6 text-primary-600" /> Recent Notices
+                        </h2>
+                        <a href="/admin/announcements" className="text-[10px] font-black text-primary-600 hover:underline uppercase tracking-widest">View All</a>
+                    </div>
+                    <div className="p-8 space-y-4 flex-1">
+                        {stats.announcements.length > 0 ? stats.announcements.map((ann, idx) => (
+                            <motion.div 
+                                key={ann._id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className="p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary-200 transition-colors group cursor-default"
+                            >
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-bold text-slate-800 text-sm group-hover:text-primary-600 transition-colors">{ann.title}</h3>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md border border-slate-100">
+                                        {new Date(ann.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                    </span>
+                                </div>
+                                <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">{ann.content}</p>
+                            </motion.div>
+                        )) : (
+                            <div className="h-full flex flex-col items-center justify-center text-center py-10">
+                                <Bell className="w-10 h-10 text-slate-200 mb-3" />
+                                <p className="text-slate-400 text-sm font-medium italic">No notices posted yet</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
