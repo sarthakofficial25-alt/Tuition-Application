@@ -72,8 +72,8 @@ router.get('/', auth, admin, async (req, res) => {
         // If not head admin, exclude sensitive fee data
         const projection = isHeadAdmin ? {} : { paymentStatus: 0, paymentHistory: 0 };
         
-        // Only get profiles for approved students
-        const approvedUsers = await User.find({ role: 'student', isApproved: true }).select('_id');
+        // Optimization: Use a more efficient query approach
+        const approvedUsers = await User.find({ role: 'student', isApproved: true }).select('_id').lean();
         const approvedUserIds = approvedUsers.map(u => u._id);
         
         let query = StudentProfile.find({ user: { $in: approvedUserIds } }, projection);
@@ -83,8 +83,9 @@ router.get('/', auth, admin, async (req, res) => {
             query = query.sort({ createdAt: -1 });
         }
         
-        if (limit) {
-            query = query.limit(parseInt(limit));
+        const limitNum = parseInt(limit);
+        if (!isNaN(limitNum) && limitNum > 0) {
+            query = query.limit(limitNum);
         }
 
         const profiles = await query.populate('user', 'name email role createdAt').lean();
@@ -92,7 +93,8 @@ router.get('/', auth, admin, async (req, res) => {
         
         res.json(data);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error fetching students:', err);
+        res.status(500).json({ message: 'Error fetching students data' });
     }
 });
 

@@ -21,6 +21,12 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
+            
+            // Safety timeout to prevent indefinite loading spinner
+            const timeout = setTimeout(() => {
+                setLoading(false);
+            }, 5000);
+
             try {
                 // Fetch all dashboard data in parallel
                 const [statsRes, studentsRes, headAdminRes, announcementsRes] = await Promise.all([
@@ -30,11 +36,18 @@ const AdminDashboard = () => {
                     API.get('/announcements?limit=3').catch(err => { console.error('Announcements error:', err); return { data: [] }; })
                 ]);
 
+                clearTimeout(timeout);
+
                 setStats(prev => ({ 
                     ...prev, 
-                    ...statsRes.data,
-                    recentStudents: studentsRes.data || [],
-                    announcements: announcementsRes.data || []
+                    totalStudents: statsRes.data?.totalStudents || 0,
+                    homeworkAssigned: statsRes.data?.homeworkAssigned || 0,
+                    classesToday: statsRes.data?.classesToday || 0,
+                    totalAnnouncements: statsRes.data?.totalAnnouncements || 0,
+                    feesPaidCount: statsRes.data?.feesPaidCount || 0,
+                    feesPendingCount: statsRes.data?.feesPendingCount || 0,
+                    recentStudents: Array.isArray(studentsRes.data) ? studentsRes.data : [],
+                    announcements: Array.isArray(announcementsRes.data) ? announcementsRes.data : []
                 }));
 
                 if (headAdminRes.data && headAdminRes.data.name) {

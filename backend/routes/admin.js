@@ -65,15 +65,16 @@ router.get('/stats', auth, admin, async (req, res) => {
         ]);
 
         res.json({
-            totalStudents,
-            homeworkAssigned,
-            classesToday,
-            totalAnnouncements,
-            feesPaidCount,
-            feesPendingCount: totalStudents - feesPaidCount
+            totalStudents: totalStudents || 0,
+            homeworkAssigned: homeworkAssigned || 0,
+            classesToday: classesToday || 0,
+            totalAnnouncements: totalAnnouncements || 0,
+            feesPaidCount: feesPaidCount || 0,
+            feesPendingCount: Math.max(0, (totalStudents || 0) - (feesPaidCount || 0))
         });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Stats error:', err);
+        res.status(500).json({ message: 'Error fetching stats' });
     }
 });
 
