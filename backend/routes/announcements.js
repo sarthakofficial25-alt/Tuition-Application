@@ -7,6 +7,7 @@ const StudentProfile = require('../models/StudentProfile');
 // Get announcements (filtered for students, all for admin)
 router.get('/', auth, async (req, res) => {
     try {
+        // Admins and Head Admins see everything
         if (req.user.role === 'admin' || req.user.role === 'head_admin') {
             const announcements = await Announcement.find()
                 .populate('targetStudent', 'name email')

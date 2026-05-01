@@ -22,21 +22,33 @@ const AdminDashboard = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [statsRes, studentsRes, headAdminRes, announcementsRes] = await Promise.all([
-                    API.get('/admin/stats'),
-                    API.get('/students'),
-                    API.get('/auth/head-admin'),
-                    API.get('/announcements')
-                ]);
-                
-                setStats({
-                    ...statsRes.data,
-                    recentStudents: studentsRes.data.slice(0, 5).reverse(),
-                    announcements: announcementsRes.data.slice(0, 3)
-                });
-                setHeadAdminName(headAdminRes.data.name);
+                // Fetch basic stats
+                try {
+                    const statsRes = await API.get('/admin/stats');
+                    setStats(prev => ({ ...prev, ...statsRes.data }));
+                } catch (err) { console.error('Stats error:', err); }
+
+                // Fetch students for recent list
+                try {
+                    const studentsRes = await API.get('/students');
+                    setStats(prev => ({ ...prev, recentStudents: studentsRes.data.slice(0, 5).reverse() }));
+                } catch (err) { console.error('Students error:', err); }
+
+                // Fetch head admin name
+                try {
+                    const headAdminRes = await API.get('/auth/head-admin');
+                    setHeadAdminName(headAdminRes.data.name);
+                } catch (err) { console.error('Head admin name error:', err); }
+
+                // Fetch announcements
+                try {
+                    const announcementsRes = await API.get('/announcements');
+                    console.log(`Fetched ${announcementsRes.data.length} announcements for dashboard`);
+                    setStats(prev => ({ ...prev, announcements: announcementsRes.data.slice(0, 3) }));
+                } catch (err) { console.error('Announcements error:', err); }
+
             } catch (err) {
-                console.error('Failed to fetch dashboard stats:', err);
+                console.error('Failed to fetch dashboard data:', err);
             } finally {
                 setLoading(false);
             }
@@ -152,15 +164,15 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Live Notice Board */}
-                <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
                     <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
                         <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
                             <Bell className="w-6 h-6 text-primary-600" /> Recent Notices
                         </h2>
                         <a href="/admin/announcements" className="text-[10px] font-black text-primary-600 hover:underline uppercase tracking-widest">View All</a>
                     </div>
-                    <div className="p-8 space-y-4 flex-1">
-                        {stats.announcements.length > 0 ? stats.announcements.map((ann, idx) => (
+                    <div className="p-8 space-y-4">
+                        {(stats.announcements && stats.announcements.length > 0) ? stats.announcements.map((ann, idx) => (
                             <motion.div 
                                 key={ann._id}
                                 initial={{ opacity: 0, y: 10 }}
@@ -171,7 +183,7 @@ const AdminDashboard = () => {
                                 <div className="flex justify-between items-start mb-2">
                                     <h3 className="font-bold text-slate-800 text-sm group-hover:text-primary-600 transition-colors">{ann.title}</h3>
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md border border-slate-100">
-                                        {new Date(ann.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                        {ann.createdAt ? new Date(ann.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Recently'}
                                     </span>
                                 </div>
                                 <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">{ann.content}</p>
@@ -180,6 +192,7 @@ const AdminDashboard = () => {
                             <div className="h-full flex flex-col items-center justify-center text-center py-10">
                                 <Bell className="w-10 h-10 text-slate-200 mb-3" />
                                 <p className="text-slate-400 text-sm font-medium italic">No notices posted yet</p>
+                                <p className="text-[10px] text-slate-300 mt-1">Total count: {stats.totalAnnouncements || 0}</p>
                             </div>
                         )}
                     </div>
