@@ -86,7 +86,9 @@ const StudentSchedule = () => {
                                                     <BookOpen className="w-6 h-6" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-slate-800 group-hover:text-primary-600 transition-colors">{sch.subject}</h3>
+                                                    <h3 className="font-bold text-slate-800 group-hover:text-primary-600 transition-colors">
+                                                        {sch.subjects?.join(' + ') || sch.subject}
+                                                    </h3>
                                                     <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Session</p>
                                                 </div>
                                             </div>

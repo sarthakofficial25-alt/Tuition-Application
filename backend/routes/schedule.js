@@ -11,7 +11,14 @@ router.get('/my', auth, async (req, res) => {
         if (!profile) return res.status(404).json({ message: 'Profile not found' });
         
         const schedule = await Schedule.find({ class: profile.class });
-        res.json(schedule);
+        const formatted = schedule.map(s => {
+            const doc = s.toObject();
+            if (!doc.subjects || doc.subjects.length === 0) {
+                doc.subjects = doc.subject ? [doc.subject] : [];
+            }
+            return doc;
+        });
+        res.json(formatted);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -21,7 +28,14 @@ router.get('/my', auth, async (req, res) => {
 router.get('/', auth, admin, async (req, res) => {
     try {
         const schedules = await Schedule.find();
-        res.json(schedules);
+        const formatted = schedules.map(s => {
+            const doc = s.toObject();
+            if (!doc.subjects || doc.subjects.length === 0) {
+                doc.subjects = doc.subject ? [doc.subject] : [];
+            }
+            return doc;
+        });
+        res.json(formatted);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -30,8 +44,8 @@ router.get('/', auth, admin, async (req, res) => {
 // Admin: Create schedule
 router.post('/', auth, admin, async (req, res) => {
     try {
-        const { className, subject, day, time, teacher } = req.body;
-        const schedule = new Schedule({ class: className, subject, day, time, teacher });
+        const { className, subjects, day, time, teacher } = req.body;
+        const schedule = new Schedule({ class: className, subjects, day, time, teacher });
         await schedule.save();
         res.json(schedule);
     } catch (err) {
@@ -42,10 +56,10 @@ router.post('/', auth, admin, async (req, res) => {
 // Admin: Edit schedule
 router.put('/:id', auth, admin, async (req, res) => {
     try {
-        const { className, subject, day, time, teacher } = req.body;
+        const { className, subjects, day, time, teacher } = req.body;
         const schedule = await Schedule.findByIdAndUpdate(
             req.params.id,
-            { class: className, subject, day, time, teacher },
+            { class: className, subjects, day, time, teacher },
             { new: true }
         );
         if (!schedule) return res.status(404).json({ message: 'Schedule not found' });

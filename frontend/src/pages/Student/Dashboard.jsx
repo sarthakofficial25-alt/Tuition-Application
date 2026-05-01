@@ -138,7 +138,9 @@ const StudentDashboard = () => {
                                 <div key={sch._id} className="flex items-start gap-5 group cursor-pointer">
                                     <div className="w-1.5 h-12 bg-primary-500 rounded-full group-hover:scale-y-110 transition-transform"></div>
                                     <div>
-                                        <p className="font-black text-slate-800 group-hover:text-primary-600 transition-colors">{sch.subject}</p>
+                                        <p className="font-black text-slate-800 group-hover:text-primary-600 transition-colors">
+                                            {sch.subjects?.join(' + ') || sch.subject}
+                                        </p>
                                         <p className="text-slate-400 text-sm font-bold mt-0.5">{sch.time}</p>
                                     </div>
                                 </div>

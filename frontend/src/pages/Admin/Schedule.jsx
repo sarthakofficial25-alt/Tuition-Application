@@ -17,7 +17,7 @@ const AdminSchedule = () => {
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
-    const [form, setForm] = useState({ className: '', subject: '', day: '', time: '', teacher: '' });
+    const [form, setForm] = useState({ className: '', subjects: [], day: '', time: '', teacher: '' });
     const [formLoading, setFormLoading] = useState(false);
     const [error, setError] = useState('');
     const [filterClass, setFilterClass] = useState('All');
@@ -40,7 +40,7 @@ const AdminSchedule = () => {
 
     const handleOpenAdd = () => {
         setEditing(null);
-        setForm({ className: '', subject: '', day: '', time: '', teacher: '' });
+        setForm({ className: '', subjects: [], day: '', time: '', teacher: '' });
         setError('');
         setShowModal(true);
     };
@@ -49,7 +49,7 @@ const AdminSchedule = () => {
         setEditing(sch);
         setForm({ 
             className: sch.class, 
-            subject: sch.subject, 
+            subjects: sch.subjects || [sch.subject], 
             day: sch.day, 
             time: sch.time, 
             teacher: sch.teacher || '' 
@@ -60,8 +60,8 @@ const AdminSchedule = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.className || !form.subject || !form.day || !form.time) {
-            setError('Please fill in all required fields.');
+        if (!form.className || form.subjects.length === 0 || !form.day || !form.time) {
+            setError('Please fill in all required fields (Class, Subjects, Day, Time).');
             return;
         }
 
@@ -165,7 +165,9 @@ const AdminSchedule = () => {
                                 <div className="mb-4">
                                     <span className="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded-md uppercase tracking-wider">Class {sch.class}</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-4">{sch.subject}</h3>
+                                <h3 className="text-xl font-bold text-slate-800 mb-4">
+                                    {sch.subjects?.join(' + ') || sch.subject}
+                                </h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3 text-slate-500 text-sm">
                                         <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
@@ -233,20 +235,35 @@ const AdminSchedule = () => {
                                             {ALL_CLASS_IDS.map(c => <option key={c} value={c}>Class {c}</option>)}
                                         </select>
                                     </div>
-                                    <div className="col-span-2 md:col-span-1">
-                                        <label className="block text-sm font-bold text-slate-700 mb-2">Subject</label>
-                                        <select 
-                                            value={form.subject}
-                                            onChange={e => setForm({...form, subject: e.target.value})}
-                                            className="w-full px-6 py-4 bg-slate-50 border border-transparent focus:border-primary-500 focus:bg-white rounded-2xl outline-none transition appearance-none"
-                                        >
-                                            <option value="">Select Subject</option>
-                                            {CLASS_DATA.find(c => c.id === form.className)?.subjects.map(s => (
-                                                <option key={s} value={s}>{s}</option>
-                                            )) || (
-                                                <option value="" disabled>Select a class first</option>
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-bold text-slate-700 mb-3">Subjects (Select Multiple)</label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                            {CLASS_DATA.find(c => c.id === form.className)?.subjects.map(s => {
+                                                const isSelected = form.subjects.includes(s);
+                                                return (
+                                                    <button
+                                                        key={s}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                setForm({ ...form, subjects: form.subjects.filter(sub => sub !== s) });
+                                                            } else {
+                                                                setForm({ ...form, subjects: [...form.subjects, s] });
+                                                            }
+                                                        }}
+                                                        className={`px-4 py-3 rounded-xl text-xs font-bold transition-all border-2 ${
+                                                            isSelected 
+                                                            ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-sm' 
+                                                            : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
+                                                        }`}
+                                                    >
+                                                        {s}
+                                                    </button>
+                                                );
+                                            }) || (
+                                                <p className="col-span-full text-slate-400 text-sm italic py-2">Please select a class first</p>
                                             )}
-                                        </select>
+                                        </div>
                                     </div>
                                     <div className="col-span-2 md:col-span-1">
                                         <label className="block text-sm font-bold text-slate-700 mb-2">Day</label>
