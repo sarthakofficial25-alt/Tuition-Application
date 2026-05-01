@@ -33,9 +33,13 @@ const StudentDashboard = () => {
         fetchData();
     }, []);
 
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const currentDay = days[new Date().getDay()];
+    const todaysSchedule = data.schedule.filter(s => s.day === currentDay);
+
     const stats = [
         { label: 'Total Homework', value: data.homework.length, icon: BookText, color: 'bg-indigo-50 text-indigo-600' },
-        { label: 'Classes Today', value: data.schedule.length, icon: Calendar, color: 'bg-emerald-50 text-emerald-600' },
+        { label: 'Classes Today', value: todaysSchedule.length, icon: Calendar, color: 'bg-emerald-50 text-emerald-600' },
         { label: 'Total Results', value: data.results.length, icon: Award, color: 'bg-amber-50 text-amber-600' },
         { label: 'Recent Notices', value: data.announcements.length, icon: Bell, color: 'bg-primary-50 text-primary-600' },
     ];
@@ -134,7 +138,7 @@ const StudentDashboard = () => {
                             <Calendar className="text-primary-600" /> Today's Schedule
                         </h2>
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 space-y-6">
-                            {data.schedule.length > 0 ? data.schedule.map(sch => (
+                            {todaysSchedule.length > 0 ? todaysSchedule.map(sch => (
                                 <div key={sch._id} className="flex items-start gap-5 group cursor-pointer">
                                     <div className="w-1.5 h-12 bg-primary-500 rounded-full group-hover:scale-y-110 transition-transform"></div>
                                     <div>
@@ -147,7 +151,7 @@ const StudentDashboard = () => {
                             )) : (
                                 <div className="text-center py-6">
                                     <Clock className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                                    <p className="text-slate-400 font-medium italic text-sm">No classes for today.</p>
+                                    <p className="text-slate-400 font-medium italic text-sm">No classes for today ({currentDay}).</p>
                                 </div>
                             )}
                         </div>
