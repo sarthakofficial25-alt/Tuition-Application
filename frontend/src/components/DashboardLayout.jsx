@@ -79,7 +79,6 @@ const Sidebar = ({ role, onClose }) => {
         </aside>
     );
 };
-import API from '../api';
 
 const DashboardLayout = ({ children, role }) => {
     const user = JSON.parse(sessionStorage.getItem('user') || '{}');
