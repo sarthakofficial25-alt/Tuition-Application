@@ -123,13 +123,23 @@ router.get('/results/my', auth, async (req, res) => {
 });
 
 // Admin: Manage results
+router.get('/results', auth, admin, async (req, res) => {
+    try { res.json(await Result.find().populate('student', 'name email').sort({ testDate: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
+});
 router.get('/results/student/:studentId', auth, admin, async (req, res) => {
-    try { res.json(await Result.find({ student: req.params.studentId }).sort({ testDate: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
+    try { res.json(await Result.find({ student: req.params.studentId }).populate('student', 'name email').sort({ testDate: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
 });
 router.post('/results', auth, admin, async (req, res) => {
     try {
         const result = new Result(req.body);
         await result.save();
+        res.json(await Result.findById(result._id).populate('student', 'name email'));
+    } catch (err) { res.status(500).json({ message: err.message }); }
+});
+router.put('/results/:id', auth, admin, async (req, res) => {
+    try {
+        const result = await Result.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate('student', 'name email');
+        if (!result) return res.status(404).json({ message: 'Result not found' });
         res.json(result);
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
