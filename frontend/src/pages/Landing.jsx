@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Users, Clock, Mail, Phone, MapPin, ChevronRight } from 'lucide-react';
-import { CLASS_DATA } from '../constants/classData';
+import { CLASS_DATA } from '../constants';
 import { API_BASE_URL as API } from '../config';
 
 const Landing = () => {

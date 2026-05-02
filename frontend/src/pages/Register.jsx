@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { BookOpen, User, Mail, Phone, Lock, Hash, Loader2, MapPin, School, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import API from '../api/api';
+import API from '../api';
 
 const Register = () => {
     const [formData, setFormData] = useState({

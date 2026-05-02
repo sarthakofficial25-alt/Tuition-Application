@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../api/api';
+import API from '../../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, User, Loader2, BookOpen } from 'lucide-react';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

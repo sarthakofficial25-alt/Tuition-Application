@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../api/api';
+import API from '../../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Calendar, Plus, Pencil, Trash2, X, Check, 
     AlertCircle, Loader2, Clock, User 
 } from 'lucide-react';
-import { CLASS_DATA, ALL_CLASS_IDS } from '../../constants/classData';
+import { CLASS_DATA, ALL_CLASS_IDS } from '../../constants';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 

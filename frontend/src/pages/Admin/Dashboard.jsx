@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Users, BookText, Calendar, Bell, DollarSign, Wallet } from 'lucide-react';
-import API from '../../api/api';
+import API from '../../api';
 import { motion } from 'framer-motion';
 
 const AdminDashboard = () => {

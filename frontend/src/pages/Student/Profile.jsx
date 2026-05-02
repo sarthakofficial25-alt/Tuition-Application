@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, Calendar, CreditCard, History, CheckCircle2, AlertCircle, MapPin, School, ShieldCheck } from 'lucide-react';
-import API from '../../api/api';
+import API from '../../api';
 
 const StudentProfile = () => {
     const [profile, setProfile] = useState(null);

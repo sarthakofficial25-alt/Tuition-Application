@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../api/api';
+import API from '../../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     GraduationCap, Plus, Pencil, Trash2, X, Check, 
     AlertCircle, Loader2, Search, User, Filter, MoreVertical, BookOpen,
     TrendingUp, Target, Users, Award, FileText
 } from 'lucide-react';
-import { ALL_SUBJECTS, ALL_CLASS_IDS } from '../../constants/classData';
+import { ALL_SUBJECTS, ALL_CLASS_IDS } from '../../constants';
 
 const AdminResults = () => {
     const [results, setResults] = useState([]);

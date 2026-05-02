@@ -70,8 +70,7 @@ const connectDB = async () => {
         console.log('MongoDB connected successfully');
 
 // Initial Head Admin Seeding (Required for first-time access)
-        const User = require('./models/User');
-        const AdminProfile = require('./models/AdminProfile');
+        const { User, AdminProfile } = require('./models');
         const bcrypt = require('bcryptjs');
 
         let headAdmin = await User.findOne({ role: 'head_admin' });
@@ -130,17 +129,15 @@ app.get('/', (req, res) => {
 });
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/students', require('./routes/students'));
-app.use('/api/homework', require('./routes/homework'));
-app.use('/api/announcements', require('./routes/announcements'));
-app.use('/api/schedule', require('./routes/schedule'));
-app.use('/api/results', require('./routes/results'));
-app.use('/api/admin', require('./routes/admin'));
+const managementRoutes = require('./routes/management');
+const academicRoutes = require('./routes/academic');
+
+app.use('/api', require('./routes/auth'));
+app.use('/api', managementRoutes);
+app.use('/api', academicRoutes);
 
 // Public routes for Landing Page
-const User = require('./models/User');
-const AdminProfile = require('./models/AdminProfile');
+const { User, AdminProfile } = require('./models');
 
 app.get('/api/public/teachers', async (req, res) => {
     try {

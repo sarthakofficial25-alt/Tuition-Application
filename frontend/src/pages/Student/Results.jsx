@@ -4,7 +4,7 @@ import {
     GraduationCap, Award, TrendingUp, Calendar, Loader2, 
     BookOpen, Trophy, Users, Star, ArrowRight, MessageCircle
 } from 'lucide-react';
-import API from '../../api/api';
+import API from '../../api';
 
 const StudentResults = () => {
     const [results, setResults] = useState([]);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { BookText, Calendar, Bell, Award, CheckCircle, Clock } from 'lucide-react';
-import API from '../../api/api';
+import API from '../../api';
 
 const StudentDashboard = () => {
     const [data, setData] = useState({

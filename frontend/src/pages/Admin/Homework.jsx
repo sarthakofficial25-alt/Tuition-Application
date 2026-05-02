@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../api/api';
+import API from '../../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BookText, Plus, Pencil, Trash2, X, Check, ChevronDown,
     CalendarDays, BookOpen, Users, AlertCircle, Loader2
 } from 'lucide-react';
-import { CLASS_DATA, ALL_SUBJECTS, ALL_CLASS_IDS } from '../../constants/classData';
+import { CLASS_DATA, ALL_SUBJECTS, ALL_CLASS_IDS } from '../../constants';
 
 // CLASS_OPTIONS: 'All' + every class ID from the landing page
 const CLASS_OPTIONS = ['All', ...ALL_CLASS_IDS];

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../api/api';
+import API from '../../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Bell, Plus, Pencil, Trash2, X, Check, 
     AlertCircle, Loader2, Megaphone, Users, User, Layers, Search
 } from 'lucide-react';
-import { ALL_CLASS_IDS } from '../../constants/classData';
+import { ALL_CLASS_IDS } from '../../constants';
 
 
 const token = () => sessionStorage.getItem('token');

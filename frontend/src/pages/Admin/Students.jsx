@@ -1,10 +1,86 @@
 import React, { useEffect, useState } from 'react';
-import { Search, UserPlus, Filter, MoreVertical, Edit2, Trash2, ArrowLeft, User, Lock, TrendingUp, Phone, Check, Loader2 } from 'lucide-react';
+import { Search, UserPlus, Filter, MoreVertical, Edit2, Trash2, ArrowLeft, User, Lock, TrendingUp, Phone, Check, Loader2, X, Mail, MapPin, School, Hash } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import API from '../../api/api';
-import AddStudentModal from './AddStudentModal';
-import EditStudentModal from './EditStudentModal';
-import { ALL_CLASS_IDS } from '../../constants/classData';
+import API from '../../api';
+import { ALL_CLASS_IDS } from '../../constants';
+
+const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', className: '', phoneNumber: '', address: '', schoolName: '' });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleSubmit = async (e) => {
+        e.preventDefault(); setLoading(true); setError('');
+        try { await API.post('/students', formData); onStudentAdded(); onClose(); }
+        catch (err) { setError(err.response?.data?.message || 'Failed to add student'); }
+        finally { setLoading(false); }
+    };
+    return (
+        <AnimatePresence>{isOpen && (
+            <div className="fixed inset-0 z-[130] flex items-center justify-center p-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div><h3 className="text-xl font-bold text-slate-800">Add New Student</h3><p className="text-slate-500 text-sm">Register a new student</p></div>
+                        <button onClick={onClose} className="p-2 hover:bg-white rounded-xl transition text-slate-400"><X className="w-6 h-6" /></button>
+                    </div>
+                    <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                        {error && <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm text-center">{error}</div>}
+                        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6">
+                            <div className="md:col-span-2"><label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label><div className="relative"><User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="name" type="text" required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="John Doe" /></div></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label><div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="email" type="email" required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="john@example.com" /></div></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number</label><div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="phoneNumber" type="tel" required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="+91 98765 43210" /></div></div>
+                            <div className="md:col-span-2"><label className="block text-sm font-semibold text-slate-700 mb-2">Residential Address</label><div className="relative"><MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="address" type="text" required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="Full address" /></div></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-2">School Name</label><div className="relative"><School className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="schoolName" type="text" required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="School name" /></div></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-2">Assign Class</label><div className="relative"><Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><select name="className" required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none appearance-none"><option value="">Select Class</option>{ALL_CLASS_IDS.map(cls => <option key={cls} value={cls}>Class {cls}</option>)}</select></div></div>
+                            <div className="md:col-span-2"><label className="block text-sm font-semibold text-slate-700 mb-2">Temporary Password</label><div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="password" type="password" required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="••••••••" /></div></div>
+                            <div className="md:col-span-2 pt-4"><button type="submit" disabled={loading} className="w-full py-4 bg-primary-600 text-white rounded-2xl font-bold transition flex items-center justify-center gap-2">{loading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Register Student'}</button></div>
+                        </form>
+                    </div>
+                </motion.div>
+            </div>
+        )}</AnimatePresence>
+    );
+};
+
+const EditStudentModal = ({ isOpen, onClose, onStudentUpdated, student }) => {
+    const [formData, setFormData] = useState({ name: '', email: '', className: '', phoneNumber: '', address: '', schoolName: '' });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    useEffect(() => { if (student) setFormData({ name: student.user?.name || '', email: student.user?.email || '', className: student.class || '', phoneNumber: student.phoneNumber || '', address: student.address || '', schoolName: student.schoolName || '' }); }, [student]);
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleSubmit = async (e) => {
+        e.preventDefault(); setLoading(true); setError('');
+        try { await API.put(`/students/${student._id}`, formData); onStudentUpdated(); onClose(); }
+        catch (err) { setError(err.response?.data?.message || 'Failed to update student'); }
+        finally { setLoading(false); }
+    };
+    return (
+        <AnimatePresence>{isOpen && (
+            <div className="fixed inset-0 z-[130] flex items-center justify-center p-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div><h3 className="text-xl font-bold text-slate-800">Edit Student</h3><p className="text-slate-500 text-sm">Modify information for {student?.user?.name}</p></div>
+                        <button onClick={onClose} className="p-2 hover:bg-white rounded-xl transition text-slate-400"><X className="w-6 h-6" /></button>
+                    </div>
+                    <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                        {error && <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm text-center">{error}</div>}
+                        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6">
+                            <div className="md:col-span-2"><label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label><div className="relative"><User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="name" type="text" value={formData.name} required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" /></div></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label><div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="email" type="email" value={formData.email} required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" /></div></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number</label><div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="phoneNumber" type="tel" value={formData.phoneNumber} required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" /></div></div>
+                            <div className="md:col-span-2"><label className="block text-sm font-semibold text-slate-700 mb-2">Residential Address</label><div className="relative"><MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="address" type="text" value={formData.address} required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" /></div></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-2">School Name</label><div className="relative"><School className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input name="schoolName" type="text" value={formData.schoolName} required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" /></div></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-2">Class Section</label><div className="relative"><Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><select name="className" value={formData.className} required onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none appearance-none">{ALL_CLASS_IDS.map(cls => <option key={cls} value={cls}>Class {cls}</option>)}</select></div></div>
+                            <div className="md:col-span-2 pt-4"><button type="submit" disabled={loading} className="w-full py-4 bg-primary-600 text-white rounded-2xl font-bold transition flex items-center justify-center gap-2">{loading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Save Changes'}</button></div>
+                        </form>
+                    </div>
+                </motion.div>
+            </div>
+        )}</AnimatePresence>
+    );
+};
 
 const Students = () => {
     const [students, setStudents] = useState([]);
