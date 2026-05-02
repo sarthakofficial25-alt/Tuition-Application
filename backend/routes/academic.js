@@ -122,6 +122,65 @@ router.get('/results/my', auth, async (req, res) => {
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// Get available tests for student's class
+router.get('/results/tests', auth, async (req, res) => {
+    try {
+        const profile = await StudentProfile.findOne({ user: req.user.id });
+        if (!profile) return res.status(404).json({ message: 'Profile not found' });
+        
+        const tests = await Result.distinct('testName', { studentClass: profile.class });
+        res.json(tests);
+    } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Get leaderboard for student's class
+router.get('/results/leaderboard', auth, async (req, res) => {
+    try {
+        const profile = await StudentProfile.findOne({ user: req.user.id });
+        if (!profile) return res.status(404).json({ message: 'Profile not found' });
+        
+        const { testName } = req.query;
+        let matchStage = { studentClass: profile.class };
+        if (testName) {
+            matchStage.testName = testName;
+        }
+
+        const leaderboard = await Result.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: '$student',
+                    avg: { $avg: '$percentage' },
+                    percentage: { $avg: '$percentage' },
+                    marksObtained: { $sum: '$marksObtained' }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'student'
+                }
+            },
+            { $unwind: '$student' },
+            {
+                $project: {
+                    _id: 1,
+                    avg: { $round: ['$avg', 1] },
+                    percentage: { $round: ['$percentage', 1] },
+                    marksObtained: 1,
+                    'student._id': 1,
+                    'student.name': 1
+                }
+            },
+            { $sort: { avg: -1 } }
+        ]);
+
+        res.json(leaderboard);
+    } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 // Admin: Manage results
 router.get('/results', auth, admin, async (req, res) => {
     try { res.json(await Result.find().populate('student', 'name email').sort({ createdAt: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
