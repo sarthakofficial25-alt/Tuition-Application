@@ -30,7 +30,76 @@ router.get('/all-faculty', auth, async (req, res) => {
     }
 });
 
-// Get dashboard stats
+// Combined dashboard initialization (Super-Endpoint for speed)
+router.get('/dashboard-init', auth, admin, async (req, res) => {
+    try {
+        const now = new Date();
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const currentMonthName = months[now.getMonth()];
+        const currentYear = now.getFullYear();
+        const today = now.toLocaleDateString('en-US', { weekday: 'long' });
+
+        const approvedStudents = await User.find({ isApproved: true, role: 'student' }).select('_id').lean();
+        const approvedUserIds = approvedStudents.map(s => s._id);
+        
+        // Fetch everything in one parallel DB operation
+        const [
+            totalStudents,
+            homeworkAssigned,
+            classesToday,
+            totalAnnouncements,
+            feesPaidCount,
+            recentStudentsProfiles,
+            headAdmin,
+            recentAnnouncements
+        ] = await Promise.all([
+            StudentProfile.countDocuments({ user: { $in: approvedUserIds } }),
+            Homework.countDocuments(),
+            Schedule.countDocuments({ day: today }),
+            Announcement.countDocuments(),
+            StudentProfile.countDocuments({ 
+                user: { $in: approvedUserIds },
+                paymentHistory: {
+                    $elemMatch: { month: currentMonthName, year: currentYear }
+                }
+            }),
+            StudentProfile.find({ user: { $in: approvedUserIds } })
+                .sort({ createdAt: -1 })
+                .limit(4)
+                .populate('user', 'name email createdAt')
+                .lean(),
+            User.findOne({ role: 'head_admin' }, 'name').lean(),
+            Announcement.find().sort({ createdAt: -1 }).limit(3).lean()
+        ]);
+
+        // Process student status
+        const processedStudents = recentStudentsProfiles.map(profile => {
+            const hasPaid = profile.paymentHistory?.some(p => p.month === currentMonthName && p.year === currentYear);
+            return {
+                ...profile,
+                currentMonthStatus: hasPaid ? 'paid' : 'pending'
+            };
+        });
+
+        res.json({
+            stats: {
+                totalStudents,
+                homeworkAssigned,
+                classesToday,
+                totalAnnouncements,
+                feesPaidCount,
+                feesPendingCount: totalStudents - feesPaidCount
+            },
+            recentStudents: processedStudents,
+            headAdminName: headAdmin ? headAdmin.name : 'Not Assigned',
+            announcements: recentAnnouncements
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Get dashboard stats (Legacy/Individual - kept for compatibility)
 router.get('/stats', auth, admin, async (req, res) => {
     try {
         const now = new Date();

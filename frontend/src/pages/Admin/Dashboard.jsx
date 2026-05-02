@@ -28,30 +28,20 @@ const AdminDashboard = () => {
             }, 5000);
 
             try {
-                // Fetch all dashboard data in parallel
-                const [statsRes, studentsRes, headAdminRes, announcementsRes] = await Promise.all([
-                    API.get('/admin/stats').catch(err => { console.error('Stats error:', err); return { data: {} }; }),
-                    API.get('/students?limit=4&sort=newest').catch(err => { console.error('Students error:', err); return { data: [] }; }),
-                    API.get('/auth/head-admin').catch(err => { console.error('Head admin error:', err); return { data: {} }; }),
-                    API.get('/announcements?limit=3').catch(err => { console.error('Announcements error:', err); return { data: [] }; })
-                ]);
+                // Fetch all dashboard data in ONE single request (Super-Endpoint)
+                const { data } = await API.get('/admin/dashboard-init');
 
                 clearTimeout(timeout);
 
                 setStats(prev => ({ 
                     ...prev, 
-                    totalStudents: statsRes.data?.totalStudents || 0,
-                    homeworkAssigned: statsRes.data?.homeworkAssigned || 0,
-                    classesToday: statsRes.data?.classesToday || 0,
-                    totalAnnouncements: statsRes.data?.totalAnnouncements || 0,
-                    feesPaidCount: statsRes.data?.feesPaidCount || 0,
-                    feesPendingCount: statsRes.data?.feesPendingCount || 0,
-                    recentStudents: Array.isArray(studentsRes.data) ? studentsRes.data : [],
-                    announcements: Array.isArray(announcementsRes.data) ? announcementsRes.data : []
+                    ...data.stats,
+                    recentStudents: data.recentStudents || [],
+                    announcements: data.announcements || []
                 }));
-
-                if (headAdminRes.data && headAdminRes.data.name) {
-                    setHeadAdminName(headAdminRes.data.name);
+                if (data.headAdminName) {
+                    setHeadAdminName(data.headAdminName);
+                    sessionStorage.setItem('headAdminName', data.headAdminName);
                 }
 
             } catch (err) {
