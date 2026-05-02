@@ -132,7 +132,7 @@ app.get('/', (req, res) => {
 const managementRoutes = require('./routes/management');
 const academicRoutes = require('./routes/academic');
 
-app.use('/api', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api', managementRoutes);
 app.use('/api', academicRoutes);
 
