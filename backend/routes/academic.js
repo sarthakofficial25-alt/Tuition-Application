@@ -124,21 +124,39 @@ router.get('/results/my', auth, async (req, res) => {
 
 // Admin: Manage results
 router.get('/results', auth, admin, async (req, res) => {
-    try { res.json(await Result.find().populate('student', 'name email').sort({ testDate: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
+    try { res.json(await Result.find().populate('student', 'name email').sort({ createdAt: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
 });
 router.get('/results/student/:studentId', auth, admin, async (req, res) => {
     try { res.json(await Result.find({ student: req.params.studentId }).populate('student', 'name email').sort({ testDate: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
 });
 router.post('/results', auth, admin, async (req, res) => {
     try {
-        const result = new Result(req.body);
+        const { studentId, testName, subjects, marksObtained, totalMarks, testDate, remarks } = req.body;
+        const profile = await StudentProfile.findOne({ user: studentId });
+        if (!profile) return res.status(404).json({ message: 'Student profile not found' });
+        
+        const percentage = (marksObtained / totalMarks) * 100;
+        const result = new Result({
+            student: studentId,
+            studentClass: profile.class,
+            testName, subjects, marksObtained, totalMarks,
+            percentage: Math.round(percentage * 100) / 100,
+            testDate: testDate ? new Date(testDate) : new Date(),
+            remarks
+        });
         await result.save();
         res.json(await Result.findById(result._id).populate('student', 'name email'));
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 router.put('/results/:id', auth, admin, async (req, res) => {
     try {
-        const result = await Result.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate('student', 'name email');
+        const { testName, subjects, marksObtained, totalMarks, testDate, remarks } = req.body;
+        const percentage = (marksObtained / totalMarks) * 100;
+        const result = await Result.findByIdAndUpdate(
+            req.params.id,
+            { testName, subjects, marksObtained, totalMarks, percentage: Math.round(percentage * 100) / 100, testDate: testDate ? new Date(testDate) : new Date(), remarks },
+            { new: true }
+        ).populate('student', 'name email');
         if (!result) return res.status(404).json({ message: 'Result not found' });
         res.json(result);
     } catch (err) { res.status(500).json({ message: err.message }); }
