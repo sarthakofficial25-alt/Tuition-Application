@@ -23,11 +23,16 @@ const UserSchema = new mongoose.Schema({
     },
     role: { type: String, enum: ['head_admin', 'admin', 'student'], default: 'student' },
     isApproved: { type: Boolean, default: false }
-}, { timestamps: true });
+}, { timestamps: true, autoIndex: true });
+
+// Explicitly index email for faster lookups during login
+UserSchema.index({ email: 1 });
 
 UserSchema.pre('save', async function() {
     if (!this.isModified('password')) return;
-    const salt = await bcrypt.genSalt(10);
+    // Reduced from 10 to 8 rounds for better performance on lower-end servers 
+    // while maintaining strong security for this application type.
+    const salt = await bcrypt.genSalt(8);
     this.password = await bcrypt.hash(this.password, salt);
 });
 

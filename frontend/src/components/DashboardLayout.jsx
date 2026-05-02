@@ -18,9 +18,17 @@ const DashboardLayout = ({ children, role }) => {
 
     React.useEffect(() => {
         const fetchHeadAdmin = async () => {
+            // Try to get from sessionStorage first
+            const cachedName = sessionStorage.getItem('headAdminName');
+            if (cachedName) {
+                setHeadAdminName(cachedName);
+                return;
+            }
+
             try {
                 const { data } = await API.get('/auth/head-admin');
                 setHeadAdminName(data.name);
+                sessionStorage.setItem('headAdminName', data.name);
             } catch (err) {
                 console.error('Failed to fetch head admin name');
             }

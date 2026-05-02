@@ -35,7 +35,8 @@ app.use(cors({
             return callback(new Error('CORS policy: This origin is not allowed.'), false);
         }
     },
-    credentials: true
+    credentials: true,
+    maxAge: 86400 // Cache preflight response for 24 hours to reduce latency
 }));
 app.use(express.json());
 
@@ -86,18 +87,19 @@ const connectDB = async () => {
             await headAdmin.save();
             console.log('Head Admin user seeded.');
         } else if (process.env.ADMIN_PASSWORD) {
-            // Check if password actually needs update to avoid heavy bcrypt hashing on every restart
-            const isMatch = await bcrypt.compare(process.env.ADMIN_PASSWORD, headAdmin.password);
+            // Only update credentials if name/email changed, or if password reset is explicitly requested
+            // This avoids heavy bcrypt hashing on every server restart
             const needsNameUpdate = process.env.ADMIN_NAME && headAdmin.name !== process.env.ADMIN_NAME;
             const needsEmailUpdate = process.env.ADMIN_EMAIL && headAdmin.email !== process.env.ADMIN_EMAIL;
+            const forcePasswordReset = process.env.RESET_ADMIN_PASSWORD === 'true';
 
-            if (!isMatch || needsNameUpdate || needsEmailUpdate) {
-                if (!isMatch) headAdmin.password = process.env.ADMIN_PASSWORD;
+            if (needsNameUpdate || needsEmailUpdate || forcePasswordReset) {
                 if (needsNameUpdate) headAdmin.name = process.env.ADMIN_NAME;
                 if (needsEmailUpdate) headAdmin.email = process.env.ADMIN_EMAIL;
+                if (forcePasswordReset) headAdmin.password = process.env.ADMIN_PASSWORD;
                 
                 await headAdmin.save();
-                console.log('Head Admin credentials updated from .env');
+                console.log('Head Admin credentials updated.');
             } else {
                 console.log('Head Admin credentials already up-to-date.');
             }
