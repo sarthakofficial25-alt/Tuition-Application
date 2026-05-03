@@ -33,9 +33,10 @@ const Teachers = () => {
         }
     };
 
-    const filteredTeachers = teachers.filter(t => 
-        t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const safeTeachers = Array.isArray(teachers) ? teachers : [];
+    const filteredTeachers = safeTeachers.filter(t => 
+        (t.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (t.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -77,7 +78,7 @@ const Teachers = () => {
                         >
                             <div className="flex items-start justify-between mb-6">
                                 <div className="w-16 h-16 bg-primary-50 text-primary-600 rounded-3xl flex items-center justify-center text-2xl font-bold transition-transform group-hover:scale-110">
-                                    {teacher.name[0]}
+                                    {teacher.name?.[0] || '?'}
                                 </div>
                                 <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${teacher.role === 'head_admin' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
                                     {teacher.role === 'head_admin' ? 'Principal Authority' : 'Teacher'}
@@ -129,7 +130,7 @@ const Teachers = () => {
                             <div className="px-10 pb-10 -mt-16 text-center">
                                 <div className="w-32 h-32 bg-white rounded-[2.5rem] shadow-xl p-2 mx-auto mb-6">
                                     <div className="w-full h-full bg-primary-50 text-primary-600 rounded-[2rem] flex items-center justify-center text-4xl font-black">
-                                        {selectedTeacher.name[0]}
+                                        {selectedTeacher.name?.[0] || '?'}
                                     </div>
                                 </div>
 
