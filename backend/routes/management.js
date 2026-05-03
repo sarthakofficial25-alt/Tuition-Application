@@ -192,15 +192,23 @@ router.post('/admin/approve-user/:id', auth, admin, async (req, res) => {
 router.get('/admin/all-faculty', auth, async (req, res) => {
     try {
         const admins = await User.find({ role: { $in: ['admin', 'head_admin'] } }).select('-password').lean();
-        const profiles = await AdminProfile.find({ user: { $in: admins.map(a => a._id) } }).populate('user', 'name email role').lean();
-        res.json(profiles);
+        const profiles = await AdminProfile.find({ user: { $in: admins.map(a => a._id) } }).lean();
+        const result = admins.map(admin => {
+            const profile = profiles.find(p => p.user && p.user.toString() === admin._id.toString());
+            return { ...admin, profile: profile || null };
+        });
+        res.json(result);
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
-router.get('/admin/faculty-directory', auth, admin, async (req, res) => {
+router.get('/admin/teachers', auth, admin, async (req, res) => {
     try {
         const admins = await User.find({ role: 'admin' }).select('-password').lean();
-        const profiles = await AdminProfile.find({ user: { $in: admins.map(a => a._id) } }).populate('user', 'name email role').lean();
-        res.json(profiles);
+        const profiles = await AdminProfile.find({ user: { $in: admins.map(a => a._id) } }).lean();
+        const result = admins.map(admin => {
+            const profile = profiles.find(p => p.user && p.user.toString() === admin._id.toString());
+            return { ...admin, profile: profile || null };
+        });
+        res.json(result);
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 router.post('/admin/teachers', auth, headAdmin, async (req, res) => {
