@@ -7,6 +7,8 @@ export const CLASS_DATA = [
     { id: '6', label: 'Class 6', subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer'] },
     { id: '7', label: 'Class 7', subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer'] },
     { id: '8', label: 'Class 8', subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer'] },
+    { id: '9', label: 'Class 9', subjects: ['Computer'] },
+    { id: '10', label: 'Class 10', subjects: ['Computer'] },
 ];
 
 // All unique subjects across every class, plus 'Others' for miscellaneous tasks
