@@ -96,7 +96,7 @@ const Landing = () => {
                         Excellence in <span className="text-primary-200">Education</span>
                     </h1>
                     <p className="text-lg md:text-2xl mb-10 text-primary-100 max-w-2xl mx-auto px-4">
-                        Providing top-tier coaching for Classes 4 to 8. Empowering students to achieve their academic goals with personalized attention.
+                        Providing top-tier coaching for Classes 4 to 10. Empowering students to achieve their academic goals with personalized attention.
                     </p>
                     <Link to={token ? dashboardLink : "/register"} className="inline-flex items-center gap-2 px-8 md:px-10 py-4 bg-white text-primary-700 rounded-full text-lg md:text-xl font-bold hover:scale-105 transition shadow-2xl">
                         {token ? 'Go to Dashboard' : 'Get Started'} <ChevronRight className="w-5 h-5" />
