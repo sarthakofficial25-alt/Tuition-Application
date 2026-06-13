@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, UserPlus, Filter, MoreVertical, Edit2, Trash2, ArrowLeft, User, Lock, TrendingUp, Phone, Check, Loader2, X, Mail, MapPin, School, Hash } from 'lucide-react';
+import { Search, UserPlus, Filter, MoreVertical, Edit2, Trash2, ArrowLeft, User, Lock, TrendingUp, Phone, Check, Loader2, X, Mail, MapPin, School, Hash, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import API from '../../api';
 import { ALL_CLASS_IDS } from '../../constants';
@@ -1030,6 +1030,7 @@ const Students = () => {
                                         <th className="px-8 py-5 font-semibold">Applicant Details</th>
                                         <th className="px-8 py-5 font-semibold">Class</th>
                                         <th className="px-8 py-5 font-semibold">School</th>
+                                        <th className="px-8 py-5 font-semibold">Registered On</th>
                                         <th className="px-8 py-5 font-semibold text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -1056,6 +1057,19 @@ const Students = () => {
                                             <td className="px-8 py-5 text-slate-600">
                                                 <p className="text-sm font-medium">{student.profile?.schoolName || 'N/A'}</p>
                                             </td>
+                                            <td className="px-8 py-5 text-slate-600">
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                                                    <div>
+                                                        <p className="font-semibold text-slate-800">
+                                                            {student.createdAt ? new Date(student.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                        </p>
+                                                        <p className="text-xs text-slate-400 font-medium">
+                                                            {student.createdAt ? new Date(student.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td className="px-8 py-5">
                                                 <div className="flex items-center justify-end gap-3">
                                                     <button 
@@ -1075,7 +1089,7 @@ const Students = () => {
                                         </tr>
                                     )) : (
                                         <tr>
-                                            <td colSpan="4" className="px-8 py-20 text-center">
+                                            <td colSpan="5" className="px-8 py-20 text-center">
                                                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                                     <User className="w-10 h-10 text-slate-300" />
                                                 </div>
