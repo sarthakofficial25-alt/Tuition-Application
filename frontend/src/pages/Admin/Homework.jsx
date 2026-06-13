@@ -3,7 +3,7 @@ import API from '../../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BookText, Plus, Pencil, Trash2, X, Check, ChevronDown,
-    CalendarDays, BookOpen, Users, AlertCircle, Loader2
+    CalendarDays, BookOpen, Users, AlertCircle, Loader2, User
 } from 'lucide-react';
 import { CLASS_DATA, ALL_SUBJECTS, ALL_CLASS_IDS } from '../../constants';
 
@@ -75,32 +75,45 @@ const ClassPicker = ({ selected, onChange }) => {
 };
 
 // ── Form Modal ────────────────────────────────────────────────────────────────
-const HomeworkModal = ({ initial, onClose, onSave }) => {
+const HomeworkModal = ({ initial, onClose, onSave, students }) => {
     const editing = !!initial;
+    const [assignType, setAssignType] = useState(initial?.student ? 'student' : 'class');
     const [form, setForm] = useState({
         title: initial?.title || '',
         subject: initial?.subject || (ALL_SUBJECTS.length > 0 ? ALL_SUBJECTS[0] : ''),
         description: initial?.description || '',
         targetClasses: initial?.targetClasses || [],
         dueDate: initial?.dueDate ? initial.dueDate.slice(0, 10) : '',
+        student: initial?.student?._id || initial?.student || '',
     });
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState('');
 
     const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+    // Students filtered by selected class (single class only for personalized)
+    const singleClass = form.targetClasses.length === 1 && form.targetClasses[0] !== 'All' ? form.targetClasses[0] : null;
+    const filteredStudents = students.filter(s => s.class === singleClass && s.user);
+
     const submit = async (e) => {
         e.preventDefault();
         if (!form.title.trim()) { setErr('Title is required.'); return; }
         if (!form.subject) { setErr('Subject is required.'); return; }
         if (form.targetClasses.length === 0) { setErr('Select at least one class.'); return; }
+        if (assignType === 'student' && !form.student) { setErr('Please select a student.'); return; }
+        if (assignType === 'student' && form.targetClasses.length !== 1) { setErr('Select exactly one class when assigning to a specific student.'); return; }
+
         setLoading(true); setErr('');
+        const payload = {
+            ...form,
+            student: assignType === 'student' ? form.student : null,
+        };
         try {
             if (editing) {
-                const { data } = await API.put(`/homework/${initial._id}`, form);
+                const { data } = await API.put(`/homework/${initial._id}`, payload);
                 onSave(data, true);
             } else {
-                const { data } = await API.post('/homework', form);
+                const { data } = await API.post('/homework', payload);
                 onSave(data, false);
             }
             onClose();
@@ -113,10 +126,10 @@ const HomeworkModal = ({ initial, onClose, onSave }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white rounded-3xl shadow-2xl w-full max-w-lg"
+                className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+                <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100 sticky top-0 bg-white z-10 rounded-t-3xl">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center">
                             <BookText className="w-5 h-5" />
@@ -149,7 +162,6 @@ const HomeworkModal = ({ initial, onClose, onSave }) => {
                         <label className="block text-sm font-semibold text-slate-700 mb-1">Subject *</label>
                         <select value={form.subject} onChange={e => set('subject', e.target.value)}
                             className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 transition bg-white">
-                            {/* Show subjects available in the selected classes; always include 'Others' */}
                             {(form.targetClasses.length === 0 || form.targetClasses.includes('All')
                                 ? ALL_SUBJECTS
                                 : [...new Set(CLASS_DATA
@@ -160,9 +172,68 @@ const HomeworkModal = ({ initial, onClose, onSave }) => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Assign To *</label>
-                        <ClassPicker selected={form.targetClasses} onChange={v => set('targetClasses', v)} />
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Target Class(es) *</label>
+                        <ClassPicker selected={form.targetClasses} onChange={v => { set('targetClasses', v); set('student', ''); }} />
                     </div>
+
+                    {/* Assign To: Entire Class / Specific Student */}
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Assign To *</label>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => { setAssignType('class'); set('student', ''); }}
+                                className={`flex-1 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border-2 ${
+                                    assignType === 'class'
+                                        ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-sm'
+                                        : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
+                                }`}
+                            >
+                                Entire Class
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setAssignType('student')}
+                                className={`flex-1 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border-2 ${
+                                    assignType === 'student'
+                                        ? 'bg-amber-50 border-amber-500 text-amber-700 shadow-sm'
+                                        : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
+                                }`}
+                            >
+                                Specific Student
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Student dropdown — only when 'student' mode and a single class chosen */}
+                    {assignType === 'student' && (
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Select Student *</label>
+                            {!singleClass ? (
+                                <p className="text-amber-600 text-xs font-medium bg-amber-50 px-4 py-3 rounded-xl">
+                                    Please select exactly one class above to see students.
+                                </p>
+                            ) : (
+                                <>
+                                    <select
+                                        value={form.student}
+                                        onChange={e => set('student', e.target.value)}
+                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 transition bg-white font-semibold text-slate-800"
+                                    >
+                                        <option value="">Select Student…</option>
+                                        {filteredStudents.map(s => (
+                                            <option key={s.user._id} value={s.user._id}>
+                                                {s.user.name} ({s.user.email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {filteredStudents.length === 0 && (
+                                        <p className="text-red-500 text-xs mt-2 font-medium">No approved students found in Class {singleClass}.</p>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">Due Date</label>
@@ -262,7 +333,13 @@ const HomeworkDetailModal = ({ hw, onClose }) => {
                         <div className="space-y-1">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assigned To</p>
                             <div className="flex flex-wrap gap-2">
-                                {(hw.targetClasses || []).map(c => <ClassBadge key={c} cls={c} />)}
+                                {hw.student ? (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                                        <User className="w-3 h-3" /> {hw.student.name} (Personalized)
+                                    </span>
+                                ) : (
+                                    (hw.targetClasses || []).map(c => <ClassBadge key={c} cls={c} />)
+                                )}
                             </div>
                         </div>
                         <div className="space-y-1">
@@ -296,6 +373,7 @@ const HomeworkDetailModal = ({ hw, onClose }) => {
 // ── Homework Card ─────────────────────────────────────────────────────────────
 const HomeworkCard = ({ hw, onEdit, onDelete, onClick }) => {
     const overdue = isOverdue(hw.dueDate);
+    const isPersonalized = !!hw.student;
     return (
         <motion.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
             onClick={() => onClick(hw)}
@@ -331,10 +409,24 @@ const HomeworkCard = ({ hw, onEdit, onDelete, onClick }) => {
 
             {/* Footer */}
             <div className="flex items-center justify-between gap-2 flex-wrap">
-                {/* Classes */}
+                {/* Target: personalized or class badges */}
                 <div className="flex items-center gap-1 flex-wrap">
-                    <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    {(hw.targetClasses || []).map(c => <ClassBadge key={c} cls={c} />)}
+                    {isPersonalized ? (
+                        <>
+                            <User className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                                {hw.student.name}
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200">
+                                Personalized
+                            </span>
+                        </>
+                    ) : (
+                        <>
+                            <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            {(hw.targetClasses || []).map(c => <ClassBadge key={c} cls={c} />)}
+                        </>
+                    )}
                 </div>
                 {/* Due date */}
                 {hw.dueDate && (
@@ -355,6 +447,7 @@ const HomeworkCard = ({ hw, onEdit, onDelete, onClick }) => {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const AdminHomework = () => {
     const [homeworks, setHomeworks] = useState([]);
+    const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editTarget, setEditTarget] = useState(null);
@@ -365,6 +458,7 @@ const AdminHomework = () => {
 
     useEffect(() => {
         fetchHomework();
+        fetchStudents();
     }, []);
 
     const fetchHomework = async () => {
@@ -374,6 +468,13 @@ const AdminHomework = () => {
             setHomeworks(data);
         } catch (err) { /* silent */ }
         finally { setLoading(false); }
+    };
+
+    const fetchStudents = async () => {
+        try {
+            const { data } = await API.get('/students');
+            setStudents(data);
+        } catch (err) { /* silent */ }
     };
 
     const handleSave = (hw, isEdit) => {
@@ -460,6 +561,7 @@ const AdminHomework = () => {
                     <HomeworkModal
                         key="hw-modal"
                         initial={editTarget}
+                        students={students}
                         onClose={() => setShowModal(false)}
                         onSave={handleSave}
                     />

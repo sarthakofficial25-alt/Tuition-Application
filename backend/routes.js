@@ -195,7 +195,14 @@ router.get('/homework/my', auth, async (req, res) => {
         const { limit } = req.query;
         const profile = await StudentProfile.findOne({ user: req.user.id });
         if (!profile) return res.status(404).json({ message: 'Profile not found' });
-        let query = Homework.find({ $or: [ { targetClasses: profile.class }, { targetClasses: 'All' } ] }).sort({ createdAt: -1 });
+        // Return homework for student's class (or All) AND (class-wide OR personalized to this student)
+        const filter = {
+            $and: [
+                { $or: [{ targetClasses: String(profile.class) }, { targetClasses: 'All' }] },
+                { $or: [{ student: null }, { student: req.user.id }] }
+            ]
+        };
+        let query = Homework.find(filter).sort({ createdAt: -1 });
         if (limit) query = query.limit(parseInt(limit));
         const homework = await query;
         res.json(homework);
@@ -204,20 +211,27 @@ router.get('/homework/my', auth, async (req, res) => {
 
 // Admin: Manage homework
 router.get('/homework', auth, admin, async (req, res) => {
-    try { res.json(await Homework.find().sort({ createdAt: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
+    try { res.json(await Homework.find().populate('student', 'name email').sort({ createdAt: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
 router.post('/homework', auth, admin, async (req, res) => {
     try {
-        const homework = new Homework(req.body);
+        const { title, subject, description, targetClasses, dueDate, student } = req.body;
+        const homework = new Homework({ title, subject, description, targetClasses, dueDate, student: student || null });
         await homework.save();
-        res.json(homework);
+        const populated = await Homework.findById(homework._id).populate('student', 'name email');
+        res.json(populated);
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
 router.put('/homework/:id', auth, admin, async (req, res) => {
     try {
-        const homework = await Homework.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const { title, subject, description, targetClasses, dueDate, student } = req.body;
+        const homework = await Homework.findByIdAndUpdate(
+            req.params.id,
+            { title, subject, description, targetClasses, dueDate, student: student || null },
+            { new: true }
+        ).populate('student', 'name email');
         if (!homework) return res.status(404).json({ message: 'Homework not found' });
         res.json(homework);
     } catch (err) { res.status(500).json({ message: err.message }); }

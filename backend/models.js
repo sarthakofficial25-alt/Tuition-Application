@@ -88,6 +88,7 @@ const HomeworkSchema = new mongoose.Schema({
     description: { type: String },
     targetClasses: { type: [String], required: true },
     dueDate: { type: Date },
+    student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     createdAt: { type: Date, default: Date.now }
 });
 

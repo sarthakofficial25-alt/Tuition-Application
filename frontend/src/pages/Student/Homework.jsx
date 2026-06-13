@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookText, BookOpen, CalendarDays, Clock, AlertCircle, Loader2, X } from 'lucide-react';
+import { BookText, BookOpen, CalendarDays, Clock, AlertCircle, Loader2, X, User } from 'lucide-react';
 
 
 const token = () => sessionStorage.getItem('token');
@@ -138,11 +138,16 @@ const StudentHomework = () => {
                                     onClick={() => setViewTarget(hw)}
                                     className="group bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col h-full cursor-pointer"
                                 >
-                                    {/* Subject Tag */}
-                                    <div className="mb-4">
+                                    {/* Subject Tag + Personalized Badge */}
+                                    <div className="mb-4 flex flex-wrap items-center gap-2">
                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary-50 text-primary-600 uppercase tracking-wider">
                                             {hw.subject}
                                         </span>
+                                        {hw.student && (
+                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                                <User className="w-3 h-3" /> Personalized
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Title & Description */}
