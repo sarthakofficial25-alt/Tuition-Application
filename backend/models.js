@@ -116,7 +116,8 @@ const ScheduleSchema = new mongoose.Schema({
     subject: { type: String },
     day: { type: String, required: true },
     time: { type: String, required: true },
-    teacher: { type: String }
+    teacher: { type: String },
+    student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
 });
 
 const Schedule = mongoose.models.Schedule || mongoose.model('Schedule', ScheduleSchema);

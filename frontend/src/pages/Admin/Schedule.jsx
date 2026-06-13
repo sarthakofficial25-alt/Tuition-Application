@@ -13,17 +13,20 @@ const token = () => sessionStorage.getItem('token');
 
 const AdminSchedule = () => {
     const [schedules, setSchedules] = useState([]);
+    const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
-    const [form, setForm] = useState({ className: '', subjects: [], day: '', time: '', teacher: '' });
+    const [form, setForm] = useState({ className: '', subjects: [], day: '', time: '', teacher: '', student: '' });
+    const [assignType, setAssignType] = useState('class'); // 'class' or 'student'
     const [formLoading, setFormLoading] = useState(false);
     const [error, setError] = useState('');
     const [filterClass, setFilterClass] = useState('All');
 
     useEffect(() => {
         fetchSchedules();
+        fetchStudents();
     }, []);
 
     const fetchSchedules = async () => {
@@ -38,9 +41,19 @@ const AdminSchedule = () => {
         }
     };
 
+    const fetchStudents = async () => {
+        try {
+            const { data } = await API.get('/students');
+            setStudents(data);
+        } catch (err) {
+            console.error('Failed to fetch students:', err);
+        }
+    };
+
     const handleOpenAdd = () => {
         setEditing(null);
-        setForm({ className: '', subjects: [], day: '', time: '', teacher: '' });
+        setForm({ className: '', subjects: [], day: '', time: '', teacher: '', student: '' });
+        setAssignType('class');
         setError('');
         setShowModal(true);
     };
@@ -52,8 +65,10 @@ const AdminSchedule = () => {
             subjects: sch.subjects || [sch.subject], 
             day: sch.day, 
             time: sch.time, 
-            teacher: sch.teacher || '' 
+            teacher: sch.teacher || '',
+            student: sch.student?._id || sch.student || ''
         });
+        setAssignType(sch.student ? 'student' : 'class');
         setError('');
         setShowModal(true);
     };
@@ -64,14 +79,22 @@ const AdminSchedule = () => {
             setError('Please fill in all required fields (Class, Subjects, Day, Time).');
             return;
         }
+        if (assignType === 'student' && !form.student) {
+            setError('Please select a student to assign the schedule to.');
+            return;
+        }
 
         setFormLoading(true);
+        const submitData = {
+            ...form,
+            student: assignType === 'student' ? form.student : null
+        };
         try {
             if (editing) {
-                const { data } = await API.put(`/schedule/${editing._id}`, form);
+                const { data } = await API.put(`/schedule/${editing._id}`, submitData);
                 setSchedules(prev => prev.map(s => s._id === data._id ? data : s));
             } else {
-                const { data } = await API.post('/schedule', form);
+                const { data } = await API.post('/schedule', submitData);
                 setSchedules(prev => [...prev, data]);
             }
             setShowModal(false);
@@ -162,8 +185,15 @@ const AdminSchedule = () => {
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <div className="mb-4">
+                                <div className="mb-4 flex flex-wrap gap-2">
                                     <span className="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded-md uppercase tracking-wider">Class {sch.class}</span>
+                                    {sch.student ? (
+                                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1">
+                                            <User className="w-3 h-3 flex-shrink-0" /> {sch.student.name}
+                                        </span>
+                                    ) : (
+                                        <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md uppercase tracking-wider">Class-Wide</span>
+                                    )}
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-800 mb-4">
                                     {sch.subjects?.join(' + ') || sch.subject}
@@ -228,13 +258,70 @@ const AdminSchedule = () => {
                                         <label className="block text-sm font-bold text-slate-700 mb-2">Class</label>
                                         <select 
                                             value={form.className}
-                                            onChange={e => setForm({...form, className: e.target.value})}
+                                            onChange={e => setForm({...form, className: e.target.value, student: ''})}
                                             className="w-full px-6 py-4 bg-slate-50 border border-transparent focus:border-primary-500 focus:bg-white rounded-2xl outline-none transition appearance-none"
                                         >
                                             <option value="">Select Class</option>
                                             {ALL_CLASS_IDS.map(c => <option key={c} value={c}>Class {c}</option>)}
                                         </select>
                                     </div>
+                                    <div className="col-span-2 md:col-span-1">
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">Assign To</label>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setAssignType('class');
+                                                    setForm(prev => ({ ...prev, student: '' }));
+                                                }}
+                                                className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                                                    assignType === 'class'
+                                                        ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-sm'
+                                                        : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
+                                                }`}
+                                            >
+                                                Entire Class
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setAssignType('student');
+                                                }}
+                                                className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                                                    assignType === 'student'
+                                                        ? 'bg-primary-50 border-primary-500 text-primary-700 shadow-sm'
+                                                        : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
+                                                }`}
+                                            >
+                                                Student
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {assignType === 'student' && (
+                                        <div className="col-span-2">
+                                            <label className="block text-sm font-bold text-slate-700 mb-2">Select Student</label>
+                                            <select
+                                                value={form.student}
+                                                onChange={e => setForm({ ...form, student: e.target.value })}
+                                                className="w-full px-6 py-4 bg-slate-50 border border-transparent focus:border-primary-500 focus:bg-white rounded-2xl outline-none transition appearance-none font-semibold text-slate-850"
+                                                required={assignType === 'student'}
+                                            >
+                                                <option value="">Select Student</option>
+                                                {students
+                                                    .filter(s => s.class === form.className && s.user)
+                                                    .map(s => (
+                                                        <option key={s.user._id} value={s.user._id}>
+                                                            {s.user.name} ({s.user.email})
+                                                        </option>
+                                                    ))
+                                                }
+                                            </select>
+                                            {students.filter(s => s.class === form.className && s.user).length === 0 && form.className && (
+                                                <p className="text-red-500 text-xs mt-2 font-medium">No approved students found in Class {form.className}.</p>
+                                            )}
+                                        </div>
+                                    )}
                                     <div className="col-span-2">
                                         <label className="block text-sm font-bold text-slate-700 mb-3">Subjects (Select Multiple)</label>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

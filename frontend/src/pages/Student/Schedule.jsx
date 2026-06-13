@@ -89,7 +89,14 @@ const StudentSchedule = () => {
                                                     <h3 className="font-bold text-slate-800 group-hover:text-primary-600 transition-colors">
                                                         {sch.subjects?.join(' + ') || sch.subject}
                                                     </h3>
-                                                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Session</p>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Session</p>
+                                                        {sch.student && (
+                                                            <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                                                Personalized
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="space-y-3 pt-2">

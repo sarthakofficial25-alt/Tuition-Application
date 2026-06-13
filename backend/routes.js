@@ -364,7 +364,13 @@ router.get('/schedule/my', auth, async (req, res) => {
     try {
         const profile = await StudentProfile.findOne({ user: req.user.id });
         if (!profile) return res.status(404).json({ message: 'Profile not found' });
-        const schedule = await Schedule.find({ class: profile.class });
+        const schedule = await Schedule.find({
+            class: profile.class,
+            $or: [
+                { student: null },
+                { student: req.user.id }
+            ]
+        });
         res.json(schedule.map(s => {
             const doc = s.toObject();
             if (!doc.subjects || doc.subjects.length === 0) doc.subjects = doc.subject ? [doc.subject] : [];
@@ -376,7 +382,7 @@ router.get('/schedule/my', auth, async (req, res) => {
 // Admin: Manage schedule
 router.get('/schedule', auth, admin, async (req, res) => {
     try {
-        const schedules = await Schedule.find();
+        const schedules = await Schedule.find().populate('student', 'name email');
         res.json(schedules.map(s => {
             const doc = s.toObject();
             if (!doc.subjects || doc.subjects.length === 0) doc.subjects = doc.subject ? [doc.subject] : [];
@@ -387,19 +393,28 @@ router.get('/schedule', auth, admin, async (req, res) => {
 
 router.post('/schedule', auth, admin, async (req, res) => {
     try {
-        const { className, subjects, day, time, teacher } = req.body;
-        const schedule = new Schedule({ class: className, subjects, day, time, teacher });
+        const { className, subjects, day, time, teacher, student } = req.body;
+        const schedule = new Schedule({ class: className, subjects, day, time, teacher, student: student || null });
         await schedule.save();
-        res.json(schedule);
+        const populated = await Schedule.findById(schedule._id).populate('student', 'name email');
+        const doc = populated.toObject();
+        if (!doc.subjects || doc.subjects.length === 0) doc.subjects = doc.subject ? [doc.subject] : [];
+        res.json(doc);
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
 router.put('/schedule/:id', auth, admin, async (req, res) => {
     try {
-        const { className, subjects, day, time, teacher } = req.body;
-        const schedule = await Schedule.findByIdAndUpdate(req.params.id, { class: className, subjects, day, time, teacher }, { new: true });
+        const { className, subjects, day, time, teacher, student } = req.body;
+        const schedule = await Schedule.findByIdAndUpdate(
+            req.params.id,
+            { class: className, subjects, day, time, teacher, student: student || null },
+            { new: true }
+        ).populate('student', 'name email');
         if (!schedule) return res.status(404).json({ message: 'Schedule not found' });
-        res.json(schedule);
+        const doc = schedule.toObject();
+        if (!doc.subjects || doc.subjects.length === 0) doc.subjects = doc.subject ? [doc.subject] : [];
+        res.json(doc);
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
