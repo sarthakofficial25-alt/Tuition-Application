@@ -53,8 +53,6 @@ The project includes a `vercel.json` file to handle client-side routing. To depl
 Ensure you set the environment variables on your hosting platform (Render, Heroku, etc.):
 - `MONGODB_URI`
 - `JWT_SECRET`
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
 
 ## Tech Stack
 - **Frontend**: React, Vite, Tailwind CSS, Lucide React, Axios, Framer Motion.
